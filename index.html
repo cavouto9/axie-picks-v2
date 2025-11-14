@@ -207,7 +207,6 @@ h1 {
     background: rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    /* Quitar efectos de focus/touch en móvil */
     outline: none !important;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -222,10 +221,14 @@ h1 {
     z-index: 10;
 }
 
+.axie-container.banned:hover,
+.axie-container.picked:hover {
+    transform: scale(1.05) !important;
+}
+
 .axie-container:active,
 .axie-container:focus {
     outline: none !important;
-    /* Sin transformación para evitar movimiento en móvil */
     transform: none !important;
     -webkit-transform: none !important;
 }
@@ -236,7 +239,6 @@ h1 {
     -webkit-transform: none !important;
 }
 
-/* Prevenir cualquier transformación no deseada después del click */
 .axie-container:active *,
 .axie-container:focus * {
     transform: none !important;
@@ -249,11 +251,10 @@ h1 {
     object-fit: contain;
     transition: all 0.3s ease;
     background: transparent;
-    /* Prevenir movimiento en móvil */
     -webkit-user-drag: none;
     user-select: none;
     -webkit-user-select: none;
-    pointer-events: none; /* La imagen no captura eventos, solo el contenedor */
+    pointer-events: none;
     transform: none !important;
     -webkit-transform: none !important;
 }
@@ -269,9 +270,10 @@ h1 {
 
 .axie-container.banned {
     border-color: #ff4757;
-    opacity: 0.7;
     background: rgba(255, 71, 87, 0.1);
     box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+    transform: scale(1.05);
+    transition: none !important;
 }
 
 .axie-container.banned::after {
@@ -290,6 +292,7 @@ h1 {
     background: rgba(46, 213, 115, 0.1);
     box-shadow: 0 0 20px rgba(46, 213, 115, 0.4);
     transform: scale(1.05);
+    transition: none !important;
 }
 
 .axie-container.picked::after {
@@ -399,7 +402,7 @@ h1 {
 }
 
 .status-indicator {
-    display: none !important; /* Ocultar completamente el indicador */
+    display: none !important;
     position: fixed !important;
     top: 20px !important;
     right: 20px !important;
@@ -413,7 +416,6 @@ h1 {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
-    /* Asegurar que no se mueva con el scroll */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
 }
@@ -579,12 +581,10 @@ h1 {
         align-items: flex-start;
     }
     
-    /* Ocultar indicador de estado en móvil */
     .status-indicator {
         display: none !important;
     }
     
-    /* Prevenir movimiento de imágenes en móvil */
     .axie-container {
         transform: none !important;
         -webkit-transform: none !important;
@@ -614,9 +614,6 @@ h1 {
         transform: translateY(0);
     }
 }
-
-/* Animación de team-card deshabilitada para evitar movimiento de ventana */
-/* .team-card { animation: fadeIn 0.5s ease-out; } */
 </style>
 </head>
 <body>
@@ -636,32 +633,10 @@ h1 {
 
 <div id="teamsContainer"></div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// ============================================
-// 🔥 CONFIGURACIÓN DE FIREBASE PARA TIEMPO REAL
-// ============================================
-// 
-// 📖 INSTRUCCIONES COMPLETAS: Lee el archivo GUIA_FIREBASE.md
-//
-// PASOS RÁPIDOS:
-// 1. Ve a https://console.firebase.google.com/
-// 2. Crea un proyecto nuevo
-// 3. Ve a "Realtime Database" > "Create Database" > "Start in test mode"
-// 4. Ve a "Project Settings" (⚙️) > "General" > "Your apps" > ícono </> (Web)
-// 5. Registra tu app y copia la configuración
-// 6. Pega los valores aquí abajo (reemplaza TODO lo que dice "TU_...")
-//
-// ⚠️ IMPORTANTE: Mantén las comillas " alrededor de cada valor
-//
-// Ejemplo de cómo debería verse:
-// apiKey: "AIzaSyB1234567890abcdefghijklmnopqrstuvwxyz",
-// authDomain: "mi-proyecto.firebaseapp.com",
-// etc...
-
 const firebaseConfig = {
     apiKey: "AIzaSyCLU9XKBuiZ6QyWRoy1hgN-AG_lYkKDNaA",
     authDomain: "axie-teams-manager.firebaseapp.com",
@@ -672,13 +647,11 @@ const firebaseConfig = {
     appId: "1:90838655104:web:ba7444a58661f8330b8665"
 };
 
-// Inicializar Firebase
 let db = null;
 let isFirebaseConfigured = false;
 let isSyncing = false;
 let realtimeListener = null;
 
-// Función para verificar si Firebase está configurado
 function isFirebaseConfigValid() {
     return firebaseConfig.apiKey && 
            firebaseConfig.apiKey !== "TU_API_KEY" &&
@@ -718,7 +691,6 @@ try {
 let teamCount = 0;
 const DB_PATH = 'axieTeams';
 
-// Función de prueba para verificar conexión
 function testFirebaseConnection() {
     if (!isFirebaseConfigured || !db) {
         console.error('❌ Firebase no está configurado');
@@ -737,10 +709,8 @@ function testFirebaseConnection() {
         });
 }
 
-// Exponer función de prueba globalmente para debugging
 window.testFirebase = testFirebaseConnection;
 
-// Función para actualizar el estado de conexión
 function updateConnectionStatus(status) {
     const indicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('statusText');
@@ -760,9 +730,7 @@ function updateConnectionStatus(status) {
     }
 }
 
-// Función para mostrar advertencia de Firebase no configurado
 function showFirebaseWarning() {
-    // Verificar si ya existe el mensaje
     if (document.getElementById('firebaseWarning')) return;
     
     const warning = document.createElement('div');
@@ -778,14 +746,12 @@ function showFirebaseWarning() {
     `;
     document.body.appendChild(warning);
     
-    // Cerrar al hacer clic
     setTimeout(() => {
         warning.style.cursor = 'pointer';
         warning.onclick = () => warning.remove();
     }, 2000);
 }
 
-// Función para mostrar notificación de cambio en tiempo real
 function showRealtimeNotification(message) {
     const notification = document.createElement('div');
     notification.className = 'realtime-notification';
@@ -798,7 +764,6 @@ function showRealtimeNotification(message) {
     }, 3000);
 }
 
-// Obtener datos de equipos desde el DOM
 function getTeamsData() {
     const teams = [];
     document.querySelectorAll('.team-card').forEach(teamDiv => {
@@ -818,19 +783,14 @@ function getTeamsData() {
     return teams;
 }
 
-// Guardar equipos (localStorage + Firebase)
 function saveTeams() {
     const teams = getTeamsData();
     
-    // Guardar en localStorage siempre (fallback)
     localStorage.setItem('axieTeams', JSON.stringify(teams));
     
-    // Guardar en Firebase si está configurado
     if (isFirebaseConfigured && db) {
-        // Usar un pequeño delay para evitar conflictos con el listener
         clearTimeout(window.saveTimeout);
         window.saveTimeout = setTimeout(() => {
-            // Solo guardar si no estamos en medio de una actualización desde tiempo real
             if (!isSyncing) {
                 isSyncing = true;
                 updateConnectionStatus('syncing');
@@ -838,7 +798,6 @@ function saveTeams() {
                 db.ref(DB_PATH).set(teams)
                     .then(() => {
                         console.log('✅ Datos guardados en Firebase');
-                        // Resetear flag más rápido para permitir que el listener funcione
                         setTimeout(() => {
                             isSyncing = false;
                             updateConnectionStatus('connected');
@@ -850,7 +809,6 @@ function saveTeams() {
                         updateConnectionStatus('connected');
                     });
             } else {
-                // Si estamos sincronizando, intentar de nuevo en un momento
                 console.log('⏳ Esperando a que termine la sincronización...');
                 setTimeout(() => {
                     saveTeams();
@@ -860,43 +818,36 @@ function saveTeams() {
     }
 }
 
-// Actualizar solo los elementos que cambiaron (sin re-renderizar todo)
 function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
     const container = document.getElementById('teamsContainer');
     const currentTeams = Array.from(container.querySelectorAll('.team-card'));
     
-    // Si no hay equipos actuales, renderizar todo
     if (currentTeams.length === 0) {
         renderTeams(newTeams, isRealtimeUpdate);
         return;
     }
     
-    // Comparar y actualizar solo lo necesario
     newTeams.forEach(newTeam => {
         const teamId = newTeam.id !== undefined ? newTeam.id : newTeam.name;
         const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
         
         if (!existingTeamDiv) {
-            // Equipo nuevo - agregarlo sin animación
             const teamDiv = createTeamElement(newTeam, teamId);
             container.appendChild(teamDiv);
             return;
         }
         
-        // Actualizar nombre si cambió
         const nameElement = existingTeamDiv.querySelector('.team-name');
         if (nameElement && nameElement.innerText !== newTeam.name) {
             nameElement.innerText = newTeam.name;
         }
         
-        // Actualizar axies del equipo
         const grid = existingTeamDiv.querySelector('.axie-grid');
         if (grid) {
             const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
             const currentAxieIds = currentAxies.map(axie => axie.dataset.axieId);
             const newAxieIds = (newTeam.axies || []).map(axie => axie.id).filter(id => id);
             
-            // Eliminar axies que ya no están
             currentAxies.forEach(axieDiv => {
                 const axieId = axieDiv.dataset.axieId;
                 if (!newAxieIds.includes(axieId)) {
@@ -904,17 +855,14 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
                 }
             });
             
-            // Agregar o actualizar axies
             newTeam.axies.forEach(axie => {
                 if (!axie.id) return;
                 
                 const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axie.id}"]`);
                 
                 if (!existingAxie) {
-                    // Axie nuevo - agregarlo
                     addAxieToGrid(axie.id, grid, axie.status || '', false);
                 } else {
-                    // Actualizar estado del axie existente sin re-renderizar
                     existingAxie.classList.remove('banned', 'picked');
                     if (axie.status === 'banned') {
                         existingAxie.classList.add('banned');
@@ -926,7 +874,6 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         }
     });
     
-    // Eliminar equipos que ya no existen
     const newTeamIds = newTeams.map(t => t.id !== undefined ? t.id : t.name);
     currentTeams.forEach(teamDiv => {
         const teamId = teamDiv.dataset.teamId;
@@ -935,13 +882,11 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         }
     });
     
-    // Mostrar mensaje si no hay equipos
     if (container.children.length === 0) {
         container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
     }
 }
 
-// Crear elemento de equipo (helper function)
 function createTeamElement(team, teamId) {
     const teamDiv = document.createElement('div');
     teamDiv.className = 'team-card';
@@ -950,7 +895,6 @@ function createTeamElement(team, teamId) {
     const header = document.createElement('div');
     header.className = 'team-header';
     header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamId})">🗑️ Eliminar equipo</button>`;
-    // El header no debe ser draggable para poder hacer click en botones
     header.style.pointerEvents = 'auto';
     teamDiv.appendChild(header);
 
@@ -973,17 +917,14 @@ function createTeamElement(team, teamId) {
     `;
     teamDiv.appendChild(addAxieDiv);
     
-    // Agregar funcionalidad de drag and drop
     setupDragAndDrop(teamDiv);
     
     return teamDiv;
 }
 
-// Configurar drag and drop para un equipo
 function setupDragAndDrop(teamCard) {
     teamCard.draggable = true;
     
-    // Prevenir drag desde el header y botones (para poder hacer click)
     const header = teamCard.querySelector('.team-header');
     const buttons = teamCard.querySelectorAll('button');
     const inputs = teamCard.querySelectorAll('input');
@@ -1001,7 +942,6 @@ function setupDragAndDrop(teamCard) {
     });
     
     teamCard.addEventListener('dragstart', (e) => {
-        // No arrastrar si el click viene directamente de un botón o input
         const target = e.target;
         if (target.tagName === 'BUTTON' || 
             target.tagName === 'INPUT' ||
@@ -1011,7 +951,6 @@ function setupDragAndDrop(teamCard) {
             return false;
         }
         
-        // Permitir arrastrar desde cualquier otra parte del card
         teamCard.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
@@ -1020,11 +959,10 @@ function setupDragAndDrop(teamCard) {
     
     teamCard.addEventListener('dragend', () => {
         teamCard.classList.remove('dragging');
-        // Remover clase de drop de todos los elementos
         document.querySelectorAll('.team-card').forEach(card => {
             card.classList.remove('drag-over');
         });
-        saveTeams(); // Guardar el nuevo orden
+        saveTeams();
     });
     
     teamCard.addEventListener('dragover', (e) => {
@@ -1034,7 +972,7 @@ function setupDragAndDrop(teamCard) {
         const dragging = document.querySelector('.dragging');
         if (!dragging || dragging === teamCard) return;
         
-        const afterElement = getDragAfterElement(teamCard.parentElement, e.clientY);
+        const afterElement = getDragAfterElement(teamCard.parentElement, e.clientX, e.clientY);
         
         if (afterElement == null) {
             teamCard.parentElement.appendChild(dragging);
@@ -1052,27 +990,49 @@ function setupDragAndDrop(teamCard) {
     teamCard.addEventListener('drop', (e) => {
         e.preventDefault();
         teamCard.classList.remove('drag-over');
-        saveTeams(); // Guardar el nuevo orden
+        saveTeams();
     });
 }
 
-// Helper para encontrar la posición después del elemento arrastrado
-function getDragAfterElement(container, y) {
+function getDragAfterElement(container, x, y) {
     const draggableElements = [...container.querySelectorAll('.team-card:not(.dragging)')];
     
     return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
+        const centerX = box.left + box.width / 2;
+        const centerY = box.top + box.height / 2;
         
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
+        const offsetX = x - centerX;
+        const offsetY = y - centerY;
+        
+        if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom) {
+            if (Math.abs(offsetX) > Math.abs(offsetY)) {
+                if (offsetX < 0) {
+                    if (offsetX > closest.offset) {
+                        return { offset: offsetX, element: child };
+                    }
+                } else {
+                    if (offsetX < closest.offset || closest.offset === Number.NEGATIVE_INFINITY) {
+                        return { offset: offsetX, element: child };
+                    }
+                }
+            } else {
+                if (offsetY < 0) {
+                    if (offsetY > closest.offset) {
+                        return { offset: offsetY, element: child };
+                    }
+                } else {
+                    if (offsetY < closest.offset || closest.offset === Number.NEGATIVE_INFINITY) {
+                        return { offset: offsetY, element: child };
+                    }
+                }
+            }
         }
+        
+        return closest;
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// Configurar drag and drop para el contenedor
 function setupContainerDragAndDrop() {
     const container = document.getElementById('teamsContainer');
     if (!container) return;
@@ -1084,8 +1044,7 @@ function setupContainerDragAndDrop() {
         const dragging = document.querySelector('.dragging');
         if (!dragging) return;
         
-        // Si no hay ningún elemento debajo, agregar al final
-        const afterElement = getDragAfterElement(container, e.clientY);
+        const afterElement = getDragAfterElement(container, e.clientX, e.clientY);
         if (afterElement == null) {
             container.appendChild(dragging);
         } else {
@@ -1099,7 +1058,6 @@ function setupContainerDragAndDrop() {
     });
 }
 
-// Renderizar equipos en el DOM (solo cuando es necesario re-renderizar todo)
 function renderTeams(teams, isRealtimeUpdate = false) {
     const container = document.getElementById('teamsContainer');
     
@@ -1108,7 +1066,6 @@ function renderTeams(teams, isRealtimeUpdate = false) {
         return;
     }
     
-    // Limpiar contenedor
     container.innerHTML = '';
     teamCount = 0;
     
@@ -1120,10 +1077,8 @@ function renderTeams(teams, isRealtimeUpdate = false) {
     });
 }
 
-// Cargar equipos (desde Firebase o localStorage)
 function loadTeams() {
     if (isFirebaseConfigured && db) {
-        // Cargar desde Firebase
         updateConnectionStatus('syncing');
         
         db.ref(DB_PATH).once('value')
@@ -1131,10 +1086,8 @@ function loadTeams() {
                 const teams = snapshot.val();
                 if (teams) {
                     renderTeams(teams);
-                    // Guardar en localStorage como backup
                     localStorage.setItem('axieTeams', JSON.stringify(teams));
                 } else {
-                    // Si Firebase está vacío, intentar localStorage
                     const saved = localStorage.getItem('axieTeams');
                     if (saved) {
                         renderTeams(JSON.parse(saved));
@@ -1144,12 +1097,10 @@ function loadTeams() {
                 }
                 updateConnectionStatus('connected');
                 
-                // Configurar listener en tiempo real
                 setupRealtimeListener();
             })
             .catch((error) => {
                 console.error('Error al cargar desde Firebase:', error);
-                // Fallback a localStorage
                 const saved = localStorage.getItem('axieTeams');
                 if (saved) {
                     renderTeams(JSON.parse(saved));
@@ -1159,7 +1110,6 @@ function loadTeams() {
                 updateConnectionStatus('disconnected');
             });
     } else {
-        // Cargar desde localStorage
         const saved = localStorage.getItem('axieTeams');
         if (saved) {
             renderTeams(JSON.parse(saved));
@@ -1169,35 +1119,28 @@ function loadTeams() {
     }
 }
 
-// Configurar listener en tiempo real
 function setupRealtimeListener() {
     if (!isFirebaseConfigured || !db) {
         console.warn('⚠️ No se puede configurar el listener: Firebase no está configurado');
         return;
     }
     
-    // Remover listener anterior si existe
     if (realtimeListener) {
         db.ref(DB_PATH).off('value', realtimeListener);
     }
     
     console.log('🔄 Configurando listener en tiempo real...');
     
-    // Variable para rastrear el último timestamp de actualización
     let lastUpdateTime = Date.now();
     
-    // Crear nuevo listener
     realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
         const teams = snapshot.val();
         const now = Date.now();
         
-        // Solo procesar si han pasado al menos 200ms desde la última actualización
         if (now - lastUpdateTime < 200) {
             return;
         }
         
-        // Comparar con los datos actuales para evitar actualizaciones innecesarias
-        // Normalizar los datos para comparación (ordenar por ID y limpiar)
         const normalizeData = (data) => {
             return JSON.stringify(
                 (data || []).map(team => ({
@@ -1214,13 +1157,10 @@ function setupRealtimeListener() {
         const currentData = normalizeData(getTeamsData());
         const newData = normalizeData(teams);
         
-        // Solo actualizar si los datos son diferentes
         if (currentData !== newData) {
-            // Si estamos sincronizando, esperar un poco más
             if (isSyncing) {
                 console.log('⏳ Esperando a que termine la sincronización local...');
                 setTimeout(() => {
-                    // Reintentar después de un delay
                     const retryData = normalizeData(getTeamsData());
                     const retryNewData = normalizeData(teams);
                     if (retryData !== retryNewData && !isSyncing) {
@@ -1240,13 +1180,10 @@ function setupRealtimeListener() {
             isSyncing = true;
             lastUpdateTime = now;
             
-            // Actualizar solo los elementos que cambiaron (sin re-renderizar todo)
             updateTeamsIncremental(teams || [], true);
             
-            // Actualizar localStorage
             localStorage.setItem('axieTeams', JSON.stringify(teams || []));
             
-            // Resetear flag después de un delay
             setTimeout(() => {
                 isSyncing = false;
             }, 400);
@@ -1259,7 +1196,6 @@ function setupRealtimeListener() {
     console.log('✅ Listener en tiempo real configurado correctamente');
 }
 
-// Agregar equipo nuevo
 function addTeam() {
     const teamName = document.getElementById('teamNameInput').value.trim();
     const axieIdsRaw = document.getElementById('axieIdsInput').value.trim();
@@ -1271,7 +1207,6 @@ function addTeam() {
     const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()).slice(0,10) : [];
     const container = document.getElementById('teamsContainer');
     
-    // Limpiar mensaje de estado vacío si existe
     if (container.querySelector('.empty-state')) {
         container.innerHTML = '';
     }
@@ -1314,14 +1249,12 @@ function addTeam() {
     saveTeams();
 }
 
-// Agregar un axie a la cuadrícula
 function addAxieToGrid(id, grid, status='', shouldSave = true) {
     if(grid.children.length >= 10) { 
         if (shouldSave) alert("⚠️ Máximo 10 Axies por equipo"); 
         return; 
     }
     
-    // Verificar si el axie ya existe en este grid
     const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
     if (existingAxies.some(axie => axie.dataset.axieId === id)) {
         if (shouldSave) alert("⚠️ Este Axie ya está en el equipo");
@@ -1330,7 +1263,7 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     
     const axieDiv = document.createElement('div');
     axieDiv.className = 'axie-container';
-    axieDiv.dataset.axieId = id; // Guardar el ID directamente en el atributo data
+    axieDiv.dataset.axieId = id;
     if(status) axieDiv.classList.add(status);
 
     const img = document.createElement('img');
@@ -1338,7 +1271,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     img.alt = `Axie ${id}`;
     img.className = 'loading';
     
-    // Manejar carga de imagen
     img.onload = () => {
         img.classList.remove('loading');
         img.classList.remove('error');
@@ -1347,7 +1279,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     img.onerror = () => {
         img.classList.remove('loading');
         img.classList.add('error');
-        // Intentar con URL alternativa
         const altImg = new Image();
         altImg.src = `https://assets.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
         altImg.onload = () => {
@@ -1357,22 +1288,18 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     };
 
     axieDiv.addEventListener('click', (e) => {
-        // Prevenir comportamiento por defecto
         e.preventDefault();
         e.stopPropagation();
         
-        // Quitar focus inmediatamente antes de hacer cambios
         axieDiv.blur();
         if (document.activeElement) {
             document.activeElement.blur();
         }
         
-        // Forzar quitar focus de cualquier elemento
         if (document.activeElement && document.activeElement !== document.body) {
             document.activeElement.blur();
         }
         
-        // Marcar que este cambio viene del usuario (no de tiempo real)
         const wasBanned = axieDiv.classList.contains('banned');
         const wasPicked = axieDiv.classList.contains('picked');
         
@@ -1385,24 +1312,19 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
             axieDiv.classList.add('banned');
         }
         
-        // Resetear cualquier transformación que pueda quedar
         axieDiv.style.transform = '';
         axieDiv.style.webkitTransform = '';
         
-        // Quitar focus nuevamente después de los cambios
         setTimeout(() => {
             axieDiv.blur();
             if (document.activeElement) {
                 document.activeElement.blur();
             }
-            // Forzar que el body tenga el focus
             if (document.body) {
                 document.body.focus();
             }
         }, 50);
         
-        // SIEMPRE guardar cuando el usuario hace cambios (no cuando viene de tiempo real)
-        // Usar setTimeout para evitar conflictos con el listener
         setTimeout(() => {
             saveTeams();
         }, 100);
@@ -1418,7 +1340,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         axieDiv.style.opacity = '0';
         setTimeout(() => {
             axieDiv.remove();
-            // SIEMPRE guardar cuando el usuario elimina (no cuando viene de tiempo real)
             setTimeout(() => {
                 saveTeams();
             }, 100);
@@ -1432,7 +1353,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     if (shouldSave) saveTeams();
 }
 
-// Agregar axie desde input
 function addAxie(teamId) {
     const input = document.getElementById(`axieInput-${teamId}`);
     const id = input.value.trim();
@@ -1443,7 +1363,6 @@ function addAxie(teamId) {
     input.value = '';
 }
 
-// Eliminar equipo completo
 function deleteTeam(teamId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este equipo?')) {
         return;
@@ -1456,11 +1375,9 @@ function deleteTeam(teamId) {
         teamDiv.style.opacity = '0';
         setTimeout(() => {
             teamDiv.remove();
-            // Guardar inmediatamente después de eliminar
             setTimeout(() => {
                 saveTeams();
             }, 100);
-            // Mostrar mensaje de estado vacío si no hay equipos
             if (container.children.length === 0) {
                 container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
             }
@@ -1468,10 +1385,8 @@ function deleteTeam(teamId) {
     }
 }
 
-// Cargar equipos al inicio
 loadTeams();
 
-// Configurar drag and drop del contenedor
 setupContainerDragAndDrop();
 </script>
 
