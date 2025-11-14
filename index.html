@@ -349,6 +349,20 @@ h1 {
     grid-auto-rows: auto;
 }
 
+@media (max-width: 700px) {
+    #teamsContainer {
+        padding: 0 10px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 500px) {
+    #teamsContainer {
+        padding: 0 8px;
+        gap: 12px;
+    }
+}
+
 .team-card {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -945,6 +959,8 @@ h1 {
     .team-card {
         padding: 8px;
         margin-bottom: 12px;
+        margin-left: 0;
+        margin-right: 0;
     }
     
     .team-name {
@@ -1823,7 +1839,7 @@ function setupDragAndDrop(teamCard) {
             if (startDrag(null, e)) {
                 teamCard.style.transition = 'none';
             }
-        }, 150);
+        }, 400);
         
         teamCard.dataset.touchDelay = touchDelay;
     }, { passive: true });
@@ -1834,7 +1850,7 @@ function setupDragAndDrop(teamCard) {
         const deltaX = Math.abs(touch.clientX - touchStartX);
         
         if (!isDragging && teamCard.dataset.touchDelay) {
-            if (deltaY > 15 || deltaX > 15) {
+            if (deltaY > 30 || deltaX > 30) {
                 clearTimeout(teamCard.dataset.touchDelay);
                 delete teamCard.dataset.touchDelay;
                 
@@ -1842,6 +1858,9 @@ function setupDragAndDrop(teamCard) {
                     teamCard.style.transition = 'none';
                     e.preventDefault();
                 }
+            } else {
+                clearTimeout(teamCard.dataset.touchDelay);
+                delete teamCard.dataset.touchDelay;
             }
         }
         
