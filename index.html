@@ -94,45 +94,27 @@ body::before {
     opacity: 0.5;
 }
 
-#themeToggleContainer {
-    position: fixed !important;
-    top: 0 !important;
-    right: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    z-index: 999999 !important;
-    pointer-events: none !important;
-    overflow: visible !important;
-}
-
 .theme-toggle {
-    /* Estilos base - los estilos inline de JS tienen prioridad */
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    border: 2px solid var(--border-color);
-    border-radius: 50px;
+    background: var(--bg-button);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+    font-size: 15px;
+    letter-spacing: 0.3px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-    box-shadow: var(--shadow-md);
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1;
-    white-space: nowrap;
-    font-family: inherit;
-    pointer-events: auto !important;
 }
 
 .theme-toggle:hover {
-    box-shadow: var(--shadow-lg) !important;
-    border-color: var(--border-hover) !important;
-    background: var(--bg-card-hover) !important;
-    transform: none !important;
-    -webkit-transform: none !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-button-hover);
 }
 
 .theme-toggle-icon {
@@ -703,7 +685,7 @@ h1 {
     
     .theme-toggle {
         font-size: 12px;
-        padding: 10px 14px;
+        padding: 12px 20px;
     }
     
     .theme-toggle-icon {
@@ -743,13 +725,6 @@ h1 {
 </head>
 <body>
 
-<div id="themeToggleContainer" style="position: fixed; top: 0; right: 0; width: 0; height: 0; z-index: 999999; pointer-events: none; overflow: visible;">
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" style="position: absolute; top: 20px; right: 20px; pointer-events: auto;">
-        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-        <span id="themeText">Modo Oscuro</span>
-    </button>
-</div>
-
 <h1>⚔️ Axie Teams Manager</h1>
 
 <div id="statusIndicator" class="status-indicator disconnected">
@@ -761,6 +736,10 @@ h1 {
     <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
     <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
     <button onclick="addTeam()">➕ Agregar equipo</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+        <span id="themeText">Modo Oscuro</span>
+    </button>
 </div>
 
 <div id="teamsContainer"></div>
@@ -769,58 +748,11 @@ h1 {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// Mantener contenedor y botón fijos
-function maintainThemeButton() {
-    const container = document.getElementById('themeToggleContainer');
-    const button = document.querySelector('.theme-toggle');
-    
-    if (!container || !button) return;
-    
-    const isMobile = window.innerWidth <= 500;
-    const topPos = isMobile ? '10px' : '20px';
-    const rightPos = isMobile ? '10px' : '20px';
-    
-    // Asegurar que el contenedor esté fijo
-    container.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        right: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        z-index: 999999 !important;
-        pointer-events: none !important;
-        overflow: visible !important;
-    `;
-    
-    // Asegurar que el botón esté en posición absoluta dentro del contenedor
-    button.style.cssText = `
-        position: absolute !important;
-        top: ${topPos} !important;
-        right: ${rightPos} !important;
-        pointer-events: auto !important;
-        transform: none !important;
-        -webkit-transform: none !important;
-        -moz-transform: none !important;
-        margin: 0 !important;
-    `;
-}
-
-// Ejecutar inmediatamente y en cada evento
-maintainThemeButton();
-window.addEventListener('load', maintainThemeButton);
-window.addEventListener('scroll', maintainThemeButton);
-window.addEventListener('resize', maintainThemeButton);
-document.addEventListener('DOMContentLoaded', maintainThemeButton);
-
-// Loop de seguridad
-setInterval(maintainThemeButton, 100);
-
 // Sistema de temas
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeUI(savedTheme);
-    maintainThemeButton();
 }
 
 function toggleTheme() {
@@ -830,7 +762,6 @@ function toggleTheme() {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeUI(newTheme);
-    maintainThemeButton();
 }
 
 function updateThemeUI(theme) {
