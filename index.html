@@ -336,7 +336,7 @@ h1 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
     position: relative;
     z-index: 1;
     padding: 0 20px;
@@ -356,7 +356,9 @@ h1 {
     border: 1px solid var(--border-color);
     cursor: grab;
     position: relative;
-    align-self: start;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .team-card:active {
@@ -469,6 +471,8 @@ h1 {
     padding: 5px;
     width: 100%;
     min-height: 0;
+    flex-grow: 1;
+    align-content: start;
 }
 
 .axie-container {
@@ -649,10 +653,11 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: auto;
     padding-top: 12px;
     border-top: 2px solid var(--border-color);
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .add-axie input {
