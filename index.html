@@ -549,6 +549,11 @@ h1 {
         align-items: flex-start;
     }
     
+    /* Ocultar indicador de estado en móvil */
+    .status-indicator {
+        display: none !important;
+    }
+    
     /* Prevenir movimiento de imágenes en móvil */
     .axie-container {
         transform: none !important;
@@ -580,9 +585,8 @@ h1 {
     }
 }
 
-.team-card {
-    animation: fadeIn 0.5s ease-out;
-}
+/* Animación de team-card deshabilitada para evitar movimiento de ventana */
+/* .team-card { animation: fadeIn 0.5s ease-out; } */
 </style>
 </head>
 <body>
@@ -826,7 +830,121 @@ function saveTeams() {
     }
 }
 
-// Renderizar equipos en el DOM
+// Actualizar solo los elementos que cambiaron (sin re-renderizar todo)
+function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
+    const container = document.getElementById('teamsContainer');
+    const currentTeams = Array.from(container.querySelectorAll('.team-card'));
+    
+    // Si no hay equipos actuales, renderizar todo
+    if (currentTeams.length === 0) {
+        renderTeams(newTeams, isRealtimeUpdate);
+        return;
+    }
+    
+    // Comparar y actualizar solo lo necesario
+    newTeams.forEach(newTeam => {
+        const teamId = newTeam.id !== undefined ? newTeam.id : newTeam.name;
+        const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+        
+        if (!existingTeamDiv) {
+            // Equipo nuevo - agregarlo sin animación
+            const teamDiv = createTeamElement(newTeam, teamId);
+            container.appendChild(teamDiv);
+            return;
+        }
+        
+        // Actualizar nombre si cambió
+        const nameElement = existingTeamDiv.querySelector('.team-name');
+        if (nameElement && nameElement.innerText !== newTeam.name) {
+            nameElement.innerText = newTeam.name;
+        }
+        
+        // Actualizar axies del equipo
+        const grid = existingTeamDiv.querySelector('.axie-grid');
+        if (grid) {
+            const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
+            const currentAxieIds = currentAxies.map(axie => axie.dataset.axieId);
+            const newAxieIds = (newTeam.axies || []).map(axie => axie.id).filter(id => id);
+            
+            // Eliminar axies que ya no están
+            currentAxies.forEach(axieDiv => {
+                const axieId = axieDiv.dataset.axieId;
+                if (!newAxieIds.includes(axieId)) {
+                    axieDiv.remove();
+                }
+            });
+            
+            // Agregar o actualizar axies
+            newTeam.axies.forEach(axie => {
+                if (!axie.id) return;
+                
+                const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axie.id}"]`);
+                
+                if (!existingAxie) {
+                    // Axie nuevo - agregarlo
+                    addAxieToGrid(axie.id, grid, axie.status || '', false);
+                } else {
+                    // Actualizar estado del axie existente sin re-renderizar
+                    existingAxie.classList.remove('banned', 'picked');
+                    if (axie.status === 'banned') {
+                        existingAxie.classList.add('banned');
+                    } else if (axie.status === 'picked') {
+                        existingAxie.classList.add('picked');
+                    }
+                }
+            });
+        }
+    });
+    
+    // Eliminar equipos que ya no existen
+    const newTeamIds = newTeams.map(t => t.id !== undefined ? t.id : t.name);
+    currentTeams.forEach(teamDiv => {
+        const teamId = teamDiv.dataset.teamId;
+        if (!newTeamIds.includes(teamId)) {
+            teamDiv.remove();
+        }
+    });
+    
+    // Mostrar mensaje si no hay equipos
+    if (container.children.length === 0) {
+        container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+    }
+}
+
+// Crear elemento de equipo (helper function)
+function createTeamElement(team, teamId) {
+    const teamDiv = document.createElement('div');
+    teamDiv.className = 'team-card';
+    teamDiv.dataset.teamId = teamId;
+
+    const header = document.createElement('div');
+    header.className = 'team-header';
+    header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamId})">🗑️ Eliminar equipo</button>`;
+    teamDiv.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'axie-grid';
+
+    team.axies.forEach(axie => {
+        if (axie.id) {
+            addAxieToGrid(axie.id, grid, axie.status || '', false);
+        }
+    });
+
+    teamDiv.appendChild(grid);
+
+    const addAxieDiv = document.createElement('div');
+    addAxieDiv.className = 'add-axie';
+    addAxieDiv.innerHTML = `
+        <input type="text" placeholder="ID Axie" id="axieInput-${teamId}" onkeypress="if(event.key==='Enter') addAxie(${teamId})">
+        <button onclick="addAxie(${teamId})">➕ Agregar Axie</button>
+    `;
+    teamDiv.appendChild(addAxieDiv);
+    
+    return teamDiv;
+}
+
+// Renderizar equipos en el DOM (solo cuando es necesario re-renderizar todo)
 function renderTeams(teams, isRealtimeUpdate = false) {
     const container = document.getElementById('teamsContainer');
     
@@ -840,43 +958,11 @@ function renderTeams(teams, isRealtimeUpdate = false) {
     teamCount = 0;
     
     teams.forEach(team => {
-        const teamDiv = document.createElement('div');
-        teamDiv.className = 'team-card';
         const currentTeamId = team.id !== undefined ? team.id : teamCount;
-        teamDiv.dataset.teamId = currentTeamId;
-
-        const header = document.createElement('div');
-        header.className = 'team-header';
-        header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${currentTeamId})">🗑️ Eliminar equipo</button>`;
-        teamDiv.appendChild(header);
-
-        const grid = document.createElement('div');
-        grid.className = 'axie-grid';
-
-        team.axies.forEach(axie => {
-            if (axie.id) {
-                addAxieToGrid(axie.id, grid, axie.status, false);
-            }
-        });
-
-        teamDiv.appendChild(grid);
-
-        const addAxieDiv = document.createElement('div');
-        addAxieDiv.className = 'add-axie';
-        addAxieDiv.innerHTML = `
-            <input type="text" placeholder="ID Axie" id="axieInput-${currentTeamId}" onkeypress="if(event.key==='Enter') addAxie(${currentTeamId})">
-            <button onclick="addAxie(${currentTeamId})">➕ Agregar Axie</button>
-        `;
-        teamDiv.appendChild(addAxieDiv);
-
+        const teamDiv = createTeamElement(team, currentTeamId);
         container.appendChild(teamDiv);
         teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
     });
-    
-    // Notificaciones de tiempo real deshabilitadas por solicitud del usuario
-    // if (isRealtimeUpdate) {
-    //     showRealtimeNotification('Equipos actualizados en tiempo real');
-    // }
 }
 
 // Cargar equipos (desde Firebase o localStorage)
@@ -984,7 +1070,7 @@ function setupRealtimeListener() {
                     const retryNewData = normalizeData(teams);
                     if (retryData !== retryNewData && !isSyncing) {
                         isSyncing = true;
-                        renderTeams(teams || [], true);
+                        updateTeamsIncremental(teams || [], true);
                         localStorage.setItem('axieTeams', JSON.stringify(teams || []));
                         setTimeout(() => { isSyncing = false; }, 300);
                     }
@@ -999,8 +1085,8 @@ function setupRealtimeListener() {
             isSyncing = true;
             lastUpdateTime = now;
             
-            // Renderizar los nuevos datos (esto creará elementos con event listeners que guardan)
-            renderTeams(teams || [], true);
+            // Actualizar solo los elementos que cambiaron (sin re-renderizar todo)
+            updateTeamsIncremental(teams || [], true);
             
             // Actualizar localStorage
             localStorage.setItem('axieTeams', JSON.stringify(teams || []));
