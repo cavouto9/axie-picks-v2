@@ -15,7 +15,6 @@ html {
 }
 
 :root {
-    /* Tema Oscuro (por defecto) */
     --bg-primary: #0f0f1e;
     --bg-secondary: #1a1a2e;
     --bg-tertiary: #16213e;
@@ -39,7 +38,6 @@ html {
 }
 
 [data-theme="light"] {
-    /* Tema Claro */
     --bg-primary: #f5f7fa;
     --bg-secondary: #ffffff;
     --bg-tertiary: #e8ecf1;
@@ -886,7 +884,6 @@ h1 {
 </head>
 <body>
 
-<!-- Login Overlay -->
 <div class="login-overlay" id="loginOverlay">
     <div class="login-container">
         <h2>🔐 Iniciar Sesión</h2>
@@ -917,7 +914,6 @@ h1 {
     </div>
 </div>
 
-<!-- Main Content -->
 <div class="main-content">
 <h1>⚔️ Axie Teams Manager</h1>
 
@@ -943,21 +939,17 @@ h1 {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// Sistema de Login con hash para ocultar credenciales
-// Función hash simple para codificar contraseñas
 function hashPassword(str) {
     let hash = 0;
     if (str.length === 0) return hash.toString();
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
     }
     return Math.abs(hash).toString(36) + str.length.toString(36);
 }
 
-// Credenciales codificadas (username y hash de password)
-// Datos ofuscados para seguridad
 const _0x1a2b = ['enfermo', 'mental'];
 const _0x3c4d = btoa('admin').split('').reverse().join('');
 const AUTH_DATA = {
@@ -965,7 +957,6 @@ const AUTH_DATA = {
     p: hashPassword(_0x1a2b[0] + _0x1a2b[1])
 };
 
-// Función para decodificar username
 function decodeUsername(encoded) {
     try {
         return atob(encoded.split('').reverse().join(''));
@@ -974,7 +965,6 @@ function decodeUsername(encoded) {
     }
 }
 
-// Credenciales reales (no visibles directamente)
 const LOGIN_CREDENTIALS = {
     username: decodeUsername(AUTH_DATA.u),
     passwordHash: AUTH_DATA.p
@@ -1033,9 +1023,7 @@ function showMainContent() {
         overlay.classList.add('hidden');
     }
     
-    // Función para inicializar el contenido
     function initializeContent() {
-        // Verificar que los elementos del DOM existan
         const teamsContainer = document.getElementById('teamsContainer');
         if (!teamsContainer) {
             console.warn('⚠️ teamsContainer no encontrado, reintentando...');
@@ -1043,7 +1031,6 @@ function showMainContent() {
             return;
         }
         
-        // Cargar equipos solo después del login
         if (typeof loadTeams === 'function') {
             console.log('🔄 Cargando equipos...');
             loadTeams();
@@ -1058,7 +1045,6 @@ function showMainContent() {
         }
     }
     
-    // Esperar un momento para que el DOM esté completamente listo
     setTimeout(initializeContent, 150);
 }
 
@@ -1070,7 +1056,6 @@ function handleLogin(event) {
     const rememberMe = document.getElementById('rememberMe').checked;
     const errorDiv = document.getElementById('loginError');
     
-    // Validar usando hash en lugar de texto plano
     const usernameMatch = username === LOGIN_CREDENTIALS.username;
     const passwordMatch = hashPassword(password) === LOGIN_CREDENTIALS.passwordHash;
     
@@ -1098,7 +1083,6 @@ function handleLogin(event) {
     }
 }
 
-// Sistema de temas
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1129,7 +1113,6 @@ function updateThemeUI(theme) {
     }
 }
 
-// Inicializar tema al cargar
 initTheme();
 
 const firebaseConfig = {
@@ -1745,7 +1728,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     axieDiv.dataset.axieId = id;
     if(status) axieDiv.classList.add(status);
 
-    // Contenedor para la imagen
     const imageWrapper = document.createElement('div');
     imageWrapper.className = 'axie-image-wrapper';
 
@@ -1772,7 +1754,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
 
     imageWrapper.appendChild(img);
 
-    // Etiqueta con el ID del axie
     const idLabel = document.createElement('div');
     idLabel.className = 'axie-id-label';
     idLabel.textContent = `#${id}`;
@@ -1876,8 +1857,6 @@ function deleteTeam(teamId) {
     }
 }
 
-// Verificar login al cargar - después de que todo esté inicializado
-// Usar DOMContentLoaded para asegurar que el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -1885,7 +1864,6 @@ if (document.readyState === 'loading') {
         }, 200);
     });
 } else {
-    // Si el DOM ya está cargado, ejecutar después de un breve delay
     setTimeout(() => {
         checkLogin();
     }, 200);
