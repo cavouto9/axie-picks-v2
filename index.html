@@ -5,200 +5,771 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Axie Teams Manager</title>
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-attachment: fixed;
     color: #fff;
     margin: 0;
     padding: 20px;
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
 }
-h1 { text-align: center; margin-bottom: 20px; }
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+}
+
 .add-team {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 30px;
+    gap: 15px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
 }
+
 .add-team input[type="text"] {
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: none;
-    width: 200px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.2);
+    width: 220px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
+
+.add-team input[type="text"]::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.add-team input[type="text"]:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
 .add-team button {
-    background-color: #fff;
-    color: #2575fc;
-    font-weight: bold;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    color: #667eea;
+    font-weight: 700;
     border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
+    padding: 14px 28px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    font-size: 15px;
+    letter-spacing: 0.3px;
 }
+
 .add-team button:hover {
-    background-color: #e1e1e1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
 }
+
+.add-team button:active {
+    transform: translateY(0);
+}
+
 #teamsContainer {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
     align-items: center;
+    position: relative;
+    z-index: 1;
 }
+
 .team-card {
-    background: rgba(0,0,0,0.4);
-    border-radius: 12px;
-    padding: 15px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px;
     width: 100%;
-    max-width: 900px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: transform 0.2s;
+    max-width: 950px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.2);
 }
-.team-card:hover { transform: translateY(-5px); }
+
+.team-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.15);
+}
+
 .team-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
 }
-.team-name { font-size: 22px; font-weight: bold; }
+
+.team-name {
+    font-size: 26px;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    letter-spacing: -0.5px;
+}
+
+.team-header button {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-weight: 600;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+}
+
+.team-header button:hover {
+    background: rgba(255,100,100,0.3);
+    border-color: rgba(255,100,100,0.5);
+    transform: scale(1.05);
+}
+
 .axie-grid {
     display: grid;
-    grid-template-columns: repeat(5, 120px);
-    gap: 10px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
     justify-content: center;
+    padding: 10px;
 }
+
 .axie-container {
     position: relative;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 16px;
     overflow: hidden;
-    transition: transform 0.2s, border 0.2s;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 3px solid transparent;
-    width: 120px;
-    height: 120px;
+    width: 100%;
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
-.axie-container:hover { transform: scale(1.05); }
+
+.axie-container:hover {
+    transform: scale(1.1) rotate(2deg);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
 .axie-container img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transition: all 0.3s ease;
+    background: transparent;
 }
-.axie-container.banned { border-color: red; opacity: 0.6; }
-.axie-container.picked { border-color: lime; }
+
+.axie-container img.loading {
+    opacity: 0.5;
+    filter: blur(5px);
+}
+
+.axie-container img.error {
+    opacity: 0.3;
+}
+
+.axie-container.banned {
+    border-color: #ff4757;
+    opacity: 0.7;
+    background: rgba(255, 71, 87, 0.1);
+    box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+}
+
+.axie-container.banned::after {
+    content: '🚫';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.axie-container.picked {
+    border-color: #2ed573;
+    background: rgba(46, 213, 115, 0.1);
+    box-shadow: 0 0 20px rgba(46, 213, 115, 0.4);
+    transform: scale(1.05);
+}
+
+.axie-container.picked::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #2ed573;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    z-index: 5;
+    box-shadow: 0 2px 10px rgba(46, 213, 115, 0.5);
+}
+
 .axie-delete {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    background: rgba(255,255,255,0.8);
-    color: red;
+    top: 6px;
+    right: 6px;
+    background: rgba(255,255,255,0.95);
+    color: #ff4757;
     border: none;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     font-weight: bold;
+    font-size: 20px;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 10;
+    line-height: 1;
 }
+
+.axie-delete:hover {
+    background: #ff4757;
+    color: white;
+    transform: scale(1.2) rotate(90deg);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.5);
+}
+
 .add-axie {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(255,255,255,0.2);
 }
+
 .add-axie input {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
-    width: 150px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    width: 180px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
+
+.add-axie input::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.add-axie input:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+}
+
 .add-axie button {
-    background-color: #fff;
-    color: #2575fc;
-    font-weight: bold;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    color: #667eea;
+    font-weight: 700;
     border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 12px 24px;
+    border-radius: 10px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
-.add-axie button:hover { background-color: #e1e1e1; }
+
+.add-axie button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255,255,255,0.8);
+    font-size: 18px;
+}
+
+.status-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.connected {
+    background: rgba(46, 213, 115, 0.3);
+    border: 2px solid rgba(46, 213, 115, 0.5);
+    color: #2ed573;
+}
+
+.status-indicator.disconnected {
+    background: rgba(255, 71, 87, 0.3);
+    border: 2px solid rgba(255, 71, 87, 0.5);
+    color: #ff4757;
+}
+
+.status-indicator.syncing {
+    background: rgba(255, 193, 7, 0.3);
+    border: 2px solid rgba(255, 193, 7, 0.5);
+    color: #ffc107;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.connected .status-dot {
+    background: #2ed573;
+}
+
+.status-indicator.disconnected .status-dot {
+    background: #ff4757;
+}
+
+.status-indicator.syncing .status-dot {
+    background: #ffc107;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
+
+.realtime-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    background: rgba(46, 213, 115, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(46, 213, 115, 0.4);
+    color: #2ed573;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 900px) {
+    .axie-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 @media (max-width: 700px) {
-    .axie-grid { grid-template-columns: repeat(2, 120px); }
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .axie-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .team-name {
+        font-size: 22px;
+    }
+    
+    .add-team input[type="text"] {
+        width: 100%;
+        max-width: 300px;
+    }
 }
+
 @media (max-width: 500px) {
-    .axie-grid { grid-template-columns: repeat(1, 120px); }
-    .add-axie input { width: 100px; }
+    .axie-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .add-axie input {
+        width: 140px;
+    }
+    
+    .team-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.team-card {
+    animation: fadeIn 0.5s ease-out;
 }
 </style>
 </head>
 <body>
 
-<h1>Axie Teams Manager</h1>
+<h1>⚔️ Axie Teams Manager</h1>
+
+<div id="statusIndicator" class="status-indicator disconnected">
+    <span class="status-dot"></span>
+    <span id="statusText">Desconectado</span>
+</div>
 
 <div class="add-team">
     <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
     <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
-    <button onclick="addTeam()">Agregar equipo</button>
+    <button onclick="addTeam()">➕ Agregar equipo</button>
 </div>
 
 <div id="teamsContainer"></div>
 
-<script>
-let teamCount = 0;
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-// Guardar y cargar equipos
-function saveTeams() {
+<script>
+// ============================================
+// CONFIGURACIÓN DE FIREBASE PARA TIEMPO REAL
+// ============================================
+// Para habilitar la sincronización en tiempo real, sigue estos pasos:
+//
+// 1. Ve a https://console.firebase.google.com/
+// 2. Crea un nuevo proyecto (o selecciona uno existente)
+// 3. En el menú lateral, ve a "Build" > "Realtime Database"
+// 4. Haz clic en "Create Database"
+// 5. Selecciona "Start in test mode" (para desarrollo)
+// 6. Elige una ubicación para tu base de datos
+// 7. Ve a "Project Settings" (ícono de engranaje) > "General"
+// 8. Baja hasta "Your apps" y haz clic en el ícono </> (Web)
+// 9. Registra tu app y copia la configuración
+// 10. Pega los valores aquí abajo
+//
+// NOTA: Si no configuras Firebase, la app funcionará en modo local (solo localStorage)
+
+const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_PROJECT_ID.appspot.com",
+    messagingSenderId: "TU_MESSAGING_SENDER_ID",
+    appId: "TU_APP_ID"
+};
+
+// Inicializar Firebase
+let db = null;
+let isFirebaseConfigured = false;
+let isSyncing = false;
+let realtimeListener = null;
+
+try {
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "TU_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        isFirebaseConfigured = true;
+        updateConnectionStatus('connected');
+        console.log('✅ Firebase conectado correctamente');
+    } else {
+        console.warn('⚠️ Firebase no configurado. Usando modo local.');
+        updateConnectionStatus('disconnected');
+    }
+} catch (error) {
+    console.error('❌ Error al inicializar Firebase:', error);
+    updateConnectionStatus('disconnected');
+}
+
+let teamCount = 0;
+const DB_PATH = 'axieTeams';
+
+// Función para actualizar el estado de conexión
+function updateConnectionStatus(status) {
+    const indicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    
+    indicator.className = `status-indicator ${status}`;
+    
+    switch(status) {
+        case 'connected':
+            statusText.textContent = '🟢 Conectado';
+            break;
+        case 'disconnected':
+            statusText.textContent = '🔴 Modo Local';
+            break;
+        case 'syncing':
+            statusText.textContent = '🟡 Sincronizando...';
+            break;
+    }
+}
+
+// Función para mostrar notificación de cambio en tiempo real
+function showRealtimeNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'realtime-notification';
+    notification.textContent = `🔄 ${message}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Obtener datos de equipos desde el DOM
+function getTeamsData() {
     const teams = [];
     document.querySelectorAll('.team-card').forEach(teamDiv => {
+        const teamId = teamDiv.dataset.teamId;
         const name = teamDiv.querySelector('.team-name').innerText;
         const axies = [];
         teamDiv.querySelectorAll('.axie-container').forEach(axieDiv => {
-            const id = axieDiv.querySelector('img').src.split('/')[5];
+            const id = axieDiv.dataset.axieId;
+            if (!id) return;
             let status = '';
             if(axieDiv.classList.contains('banned')) status = 'banned';
             else if(axieDiv.classList.contains('picked')) status = 'picked';
             axies.push({id, status});
         });
-        teams.push({name, axies});
+        teams.push({id: teamId, name, axies});
     });
-    localStorage.setItem('axieTeams', JSON.stringify(teams));
+    return teams;
 }
 
-function loadTeams() {
-    const saved = localStorage.getItem('axieTeams');
-    if(!saved) return;
-    const teams = JSON.parse(saved);
+// Guardar equipos (localStorage + Firebase)
+function saveTeams() {
+    const teams = getTeamsData();
+    
+    // Guardar en localStorage siempre (fallback)
+    localStorage.setItem('axieTeams', JSON.stringify(teams));
+    
+    // Guardar en Firebase si está configurado
+    if (isFirebaseConfigured && db && !isSyncing) {
+        isSyncing = true;
+        updateConnectionStatus('syncing');
+        
+        db.ref(DB_PATH).set(teams)
+            .then(() => {
+                isSyncing = false;
+                updateConnectionStatus('connected');
+            })
+            .catch((error) => {
+                console.error('Error al guardar en Firebase:', error);
+                isSyncing = false;
+                updateConnectionStatus('connected');
+            });
+    }
+}
+
+// Renderizar equipos en el DOM
+function renderTeams(teams, isRealtimeUpdate = false) {
+    const container = document.getElementById('teamsContainer');
+    
+    if (!teams || teams.length === 0) {
+        container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+        return;
+    }
+    
+    // Limpiar contenedor
+    container.innerHTML = '';
+    teamCount = 0;
+    
     teams.forEach(team => {
-        const container = document.getElementById('teamsContainer');
         const teamDiv = document.createElement('div');
         teamDiv.className = 'team-card';
-        teamDiv.dataset.teamId = teamCount;
+        const currentTeamId = team.id !== undefined ? team.id : teamCount;
+        teamDiv.dataset.teamId = currentTeamId;
 
         const header = document.createElement('div');
         header.className = 'team-header';
-        header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamCount})">Eliminar equipo</button>`;
+        header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${currentTeamId})">🗑️ Eliminar equipo</button>`;
         teamDiv.appendChild(header);
 
         const grid = document.createElement('div');
         grid.className = 'axie-grid';
 
-        team.axies.forEach(axie => addAxieToGrid(axie.id, grid, axie.status));
+        team.axies.forEach(axie => {
+            if (axie.id) {
+                addAxieToGrid(axie.id, grid, axie.status, false);
+            }
+        });
 
         teamDiv.appendChild(grid);
 
         const addAxieDiv = document.createElement('div');
         addAxieDiv.className = 'add-axie';
         addAxieDiv.innerHTML = `
-            <input type="text" placeholder="ID Axie" id="axieInput-${teamCount}">
-            <button onclick="addAxie(${teamCount})">Agregar Axie</button>
+            <input type="text" placeholder="ID Axie" id="axieInput-${currentTeamId}" onkeypress="if(event.key==='Enter') addAxie(${currentTeamId})">
+            <button onclick="addAxie(${currentTeamId})">➕ Agregar Axie</button>
         `;
         teamDiv.appendChild(addAxieDiv);
 
         container.appendChild(teamDiv);
-        teamCount++;
+        teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
+    });
+    
+    if (isRealtimeUpdate) {
+        showRealtimeNotification('Equipos actualizados en tiempo real');
+    }
+}
+
+// Cargar equipos (desde Firebase o localStorage)
+function loadTeams() {
+    if (isFirebaseConfigured && db) {
+        // Cargar desde Firebase
+        updateConnectionStatus('syncing');
+        
+        db.ref(DB_PATH).once('value')
+            .then((snapshot) => {
+                const teams = snapshot.val();
+                if (teams) {
+                    renderTeams(teams);
+                    // Guardar en localStorage como backup
+                    localStorage.setItem('axieTeams', JSON.stringify(teams));
+                } else {
+                    // Si Firebase está vacío, intentar localStorage
+                    const saved = localStorage.getItem('axieTeams');
+                    if (saved) {
+                        renderTeams(JSON.parse(saved));
+                    } else {
+                        renderTeams([]);
+                    }
+                }
+                updateConnectionStatus('connected');
+                
+                // Configurar listener en tiempo real
+                setupRealtimeListener();
+            })
+            .catch((error) => {
+                console.error('Error al cargar desde Firebase:', error);
+                // Fallback a localStorage
+                const saved = localStorage.getItem('axieTeams');
+                if (saved) {
+                    renderTeams(JSON.parse(saved));
+                } else {
+                    renderTeams([]);
+                }
+                updateConnectionStatus('disconnected');
+            });
+    } else {
+        // Cargar desde localStorage
+        const saved = localStorage.getItem('axieTeams');
+        if (saved) {
+            renderTeams(JSON.parse(saved));
+        } else {
+            renderTeams([]);
+        }
+    }
+}
+
+// Configurar listener en tiempo real
+function setupRealtimeListener() {
+    if (!isFirebaseConfigured || !db) return;
+    
+    // Remover listener anterior si existe
+    if (realtimeListener) {
+        db.ref(DB_PATH).off('value', realtimeListener);
+    }
+    
+    // Crear nuevo listener
+    realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
+        const teams = snapshot.val();
+        if (teams && !isSyncing) {
+            // Solo actualizar si no estamos sincronizando (evitar loops)
+            isSyncing = true;
+            renderTeams(teams, true);
+            // Actualizar localStorage
+            localStorage.setItem('axieTeams', JSON.stringify(teams));
+            setTimeout(() => {
+                isSyncing = false;
+            }, 100);
+        }
     });
 }
 
@@ -206,11 +777,18 @@ function loadTeams() {
 function addTeam() {
     const teamName = document.getElementById('teamNameInput').value.trim();
     const axieIdsRaw = document.getElementById('axieIdsInput').value.trim();
-    if(!teamName) { alert("Agrega un nombre de equipo"); return; }
+    if(!teamName) { 
+        alert("⚠️ Agrega un nombre de equipo"); 
+        return; 
+    }
 
-    const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).slice(0,10) : [];
-
+    const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()).slice(0,10) : [];
     const container = document.getElementById('teamsContainer');
+    
+    // Limpiar mensaje de estado vacío si existe
+    if (container.querySelector('.empty-state')) {
+        container.innerHTML = '';
+    }
 
     const teamDiv = document.createElement('div');
     teamDiv.className = 'team-card';
@@ -218,21 +796,26 @@ function addTeam() {
 
     const header = document.createElement('div');
     header.className = 'team-header';
-    header.innerHTML = `<span class="team-name">${teamName}</span> <button onclick="deleteTeam(${teamCount})">Eliminar equipo</button>`;
+    header.innerHTML = `<span class="team-name">${teamName}</span> <button onclick="deleteTeam(${teamCount})">🗑️ Eliminar equipo</button>`;
     teamDiv.appendChild(header);
 
     const grid = document.createElement('div');
     grid.className = 'axie-grid';
 
-    axieIds.forEach(id => addAxieToGrid(id, grid));
+    axieIds.forEach(id => {
+        const trimmedId = id.trim();
+        if (trimmedId) {
+            addAxieToGrid(trimmedId, grid);
+        }
+    });
 
     teamDiv.appendChild(grid);
 
     const addAxieDiv = document.createElement('div');
     addAxieDiv.className = 'add-axie';
     addAxieDiv.innerHTML = `
-        <input type="text" placeholder="ID Axie" id="axieInput-${teamCount}">
-        <button onclick="addAxie(${teamCount})">Agregar Axie</button>
+        <input type="text" placeholder="ID Axie" id="axieInput-${teamCount}" onkeypress="if(event.key==='Enter') addAxie(${teamCount})">
+        <button onclick="addAxie(${teamCount})">➕ Agregar Axie</button>
     `;
     teamDiv.appendChild(addAxieDiv);
 
@@ -246,15 +829,46 @@ function addTeam() {
 }
 
 // Agregar un axie a la cuadrícula
-function addAxieToGrid(id, grid, status='') {
-    if(grid.children.length >= 10) { alert("Máximo 10 Axies por equipo"); return; }
+function addAxieToGrid(id, grid, status='', shouldSave = true) {
+    if(grid.children.length >= 10) { 
+        if (shouldSave) alert("⚠️ Máximo 10 Axies por equipo"); 
+        return; 
+    }
+    
+    // Verificar si el axie ya existe en este grid
+    const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
+    if (existingAxies.some(axie => axie.dataset.axieId === id)) {
+        if (shouldSave) alert("⚠️ Este Axie ya está en el equipo");
+        return;
+    }
+    
     const axieDiv = document.createElement('div');
     axieDiv.className = 'axie-container';
+    axieDiv.dataset.axieId = id; // Guardar el ID directamente en el atributo data
     if(status) axieDiv.classList.add(status);
 
     const img = document.createElement('img');
     img.src = `https://axiecdn.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
     img.alt = `Axie ${id}`;
+    img.className = 'loading';
+    
+    // Manejar carga de imagen
+    img.onload = () => {
+        img.classList.remove('loading');
+        img.classList.remove('error');
+    };
+    
+    img.onerror = () => {
+        img.classList.remove('loading');
+        img.classList.add('error');
+        // Intentar con URL alternativa
+        const altImg = new Image();
+        altImg.src = `https://assets.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
+        altImg.onload = () => {
+            img.src = altImg.src;
+            img.classList.remove('error');
+        };
+    };
 
     axieDiv.addEventListener('click', () => {
         if(axieDiv.classList.contains('banned')) {
@@ -265,7 +879,7 @@ function addAxieToGrid(id, grid, status='') {
         } else {
             axieDiv.classList.add('banned');
         }
-        saveTeams();
+        if (shouldSave) saveTeams();
     });
 
     const deleteBtn = document.createElement('button');
@@ -273,13 +887,20 @@ function addAxieToGrid(id, grid, status='') {
     deleteBtn.innerText = '×';
     deleteBtn.onclick = (e) => {
         e.stopPropagation();
-        axieDiv.remove();
-        saveTeams();
+        axieDiv.style.transition = 'all 0.3s ease';
+        axieDiv.style.transform = 'scale(0) rotate(180deg)';
+        axieDiv.style.opacity = '0';
+        setTimeout(() => {
+            axieDiv.remove();
+            if (shouldSave) saveTeams();
+        }, 300);
     };
 
     axieDiv.appendChild(img);
     axieDiv.appendChild(deleteBtn);
     grid.appendChild(axieDiv);
+    
+    if (shouldSave) saveTeams();
 }
 
 // Agregar axie desde input
@@ -291,15 +912,28 @@ function addAxie(teamId) {
     const grid = teamDiv.querySelector('.axie-grid');
     addAxieToGrid(id, grid);
     input.value = '';
-    saveTeams();
 }
 
 // Eliminar equipo completo
 function deleteTeam(teamId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este equipo?')) {
+        return;
+    }
     const container = document.getElementById('teamsContainer');
     const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if(teamDiv) container.removeChild(teamDiv);
-    saveTeams();
+    if(teamDiv) {
+        teamDiv.style.transition = 'all 0.4s ease';
+        teamDiv.style.transform = 'translateX(-100%)';
+        teamDiv.style.opacity = '0';
+        setTimeout(() => {
+            teamDiv.remove();
+            saveTeams();
+            // Mostrar mensaje de estado vacío si no hay equipos
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+            }
+        }, 400);
+    }
 }
 
 // Cargar equipos al inicio
@@ -308,4 +942,3 @@ loadTeams();
 
 </body>
 </html>
-
