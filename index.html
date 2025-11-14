@@ -65,8 +65,9 @@ h1 { text-align: center; margin-bottom: 20px; }
 .team-name { font-size: 22px; font-weight: bold; }
 .axie-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(5, 120px);
     gap: 10px;
+    justify-content: center;
 }
 .axie-container {
     position: relative;
@@ -75,11 +76,14 @@ h1 { text-align: center; margin-bottom: 20px; }
     overflow: hidden;
     transition: transform 0.2s, border 0.2s;
     border: 3px solid transparent;
+    width: 120px;
+    height: 120px;
 }
 .axie-container:hover { transform: scale(1.05); }
 .axie-container img {
     width: 100%;
-    display: block;
+    height: 100%;
+    object-fit: contain;
 }
 .axie-container.banned { border-color: red; opacity: 0.6; }
 .axie-container.picked { border-color: lime; }
@@ -121,8 +125,11 @@ h1 { text-align: center; margin-bottom: 20px; }
     cursor: pointer;
 }
 .add-axie button:hover { background-color: #e1e1e1; }
+@media (max-width: 700px) {
+    .axie-grid { grid-template-columns: repeat(2, 120px); }
+}
 @media (max-width: 500px) {
-    .axie-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+    .axie-grid { grid-template-columns: repeat(1, 120px); }
     .add-axie input { width: 100px; }
 }
 </style>
@@ -142,6 +149,60 @@ h1 { text-align: center; margin-bottom: 20px; }
 <script>
 let teamCount = 0;
 
+// Guardar y cargar equipos
+function saveTeams() {
+    const teams = [];
+    document.querySelectorAll('.team-card').forEach(teamDiv => {
+        const name = teamDiv.querySelector('.team-name').innerText;
+        const axies = [];
+        teamDiv.querySelectorAll('.axie-container').forEach(axieDiv => {
+            const id = axieDiv.querySelector('img').src.split('/')[5];
+            let status = '';
+            if(axieDiv.classList.contains('banned')) status = 'banned';
+            else if(axieDiv.classList.contains('picked')) status = 'picked';
+            axies.push({id, status});
+        });
+        teams.push({name, axies});
+    });
+    localStorage.setItem('axieTeams', JSON.stringify(teams));
+}
+
+function loadTeams() {
+    const saved = localStorage.getItem('axieTeams');
+    if(!saved) return;
+    const teams = JSON.parse(saved);
+    teams.forEach(team => {
+        const container = document.getElementById('teamsContainer');
+        const teamDiv = document.createElement('div');
+        teamDiv.className = 'team-card';
+        teamDiv.dataset.teamId = teamCount;
+
+        const header = document.createElement('div');
+        header.className = 'team-header';
+        header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamCount})">Eliminar equipo</button>`;
+        teamDiv.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'axie-grid';
+
+        team.axies.forEach(axie => addAxieToGrid(axie.id, grid, axie.status));
+
+        teamDiv.appendChild(grid);
+
+        const addAxieDiv = document.createElement('div');
+        addAxieDiv.className = 'add-axie';
+        addAxieDiv.innerHTML = `
+            <input type="text" placeholder="ID Axie" id="axieInput-${teamCount}">
+            <button onclick="addAxie(${teamCount})">Agregar Axie</button>
+        `;
+        teamDiv.appendChild(addAxieDiv);
+
+        container.appendChild(teamDiv);
+        teamCount++;
+    });
+}
+
+// Agregar equipo nuevo
 function addTeam() {
     const teamName = document.getElementById('teamNameInput').value.trim();
     const axieIdsRaw = document.getElementById('axieIdsInput').value.trim();
@@ -167,7 +228,6 @@ function addTeam() {
 
     teamDiv.appendChild(grid);
 
-    // Añadir sección para agregar más Axies
     const addAxieDiv = document.createElement('div');
     addAxieDiv.className = 'add-axie';
     addAxieDiv.innerHTML = `
@@ -181,12 +241,16 @@ function addTeam() {
     teamCount++;
     document.getElementById('teamNameInput').value = '';
     document.getElementById('axieIdsInput').value = '';
+
+    saveTeams();
 }
 
-function addAxieToGrid(id, grid) {
+// Agregar un axie a la cuadrícula
+function addAxieToGrid(id, grid, status='') {
     if(grid.children.length >= 10) { alert("Máximo 10 Axies por equipo"); return; }
     const axieDiv = document.createElement('div');
     axieDiv.className = 'axie-container';
+    if(status) axieDiv.classList.add(status);
 
     const img = document.createElement('img');
     img.src = `https://axiecdn.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
@@ -201,15 +265,16 @@ function addAxieToGrid(id, grid) {
         } else {
             axieDiv.classList.add('banned');
         }
+        saveTeams();
     });
 
-    // Botón para eliminar este Axie
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'axie-delete';
     deleteBtn.innerText = '×';
     deleteBtn.onclick = (e) => {
         e.stopPropagation();
         axieDiv.remove();
+        saveTeams();
     };
 
     axieDiv.appendChild(img);
@@ -217,6 +282,7 @@ function addAxieToGrid(id, grid) {
     grid.appendChild(axieDiv);
 }
 
+// Agregar axie desde input
 function addAxie(teamId) {
     const input = document.getElementById(`axieInput-${teamId}`);
     const id = input.value.trim();
@@ -225,13 +291,19 @@ function addAxie(teamId) {
     const grid = teamDiv.querySelector('.axie-grid');
     addAxieToGrid(id, grid);
     input.value = '';
+    saveTeams();
 }
 
+// Eliminar equipo completo
 function deleteTeam(teamId) {
     const container = document.getElementById('teamsContainer');
     const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
     if(teamDiv) container.removeChild(teamDiv);
+    saveTeams();
 }
+
+// Cargar equipos al inicio
+loadTeams();
 </script>
 
 </body>
