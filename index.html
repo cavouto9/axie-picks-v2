@@ -106,43 +106,53 @@ h1 {
 }
 
 #teamsContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    align-items: start;
     position: relative;
     z-index: 1;
+    padding: 0 20px;
+    max-width: 1800px;
+    margin: 0 auto;
 }
 
 .team-card {
     background: rgba(255,255,255,0.1);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 25px;
+    border-radius: 16px;
+    padding: 15px;
     width: 100%;
-    max-width: 950px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
     border: 1px solid rgba(255,255,255,0.2);
+    cursor: move;
+    position: relative;
 }
 
 .team-card:hover {
-    transform: translateY(-8px) scale(1.01);
+    transform: translateY(-4px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.3);
     background: rgba(255,255,255,0.15);
+}
+
+.team-card.dragging {
+    opacity: 0.6;
+    transform: rotate(2deg);
+    z-index: 1000;
 }
 
 .team-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 2px solid rgba(255,255,255,0.2);
 }
 
 .team-name {
-    font-size: 26px;
+    font-size: 18px;
     font-weight: 700;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2);
     letter-spacing: -0.5px;
@@ -153,11 +163,11 @@ h1 {
     color: #fff;
     font-weight: 600;
     border: 2px solid rgba(255,255,255,0.3);
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
+    font-size: 12px;
     backdrop-filter: blur(10px);
 }
 
@@ -170,9 +180,9 @@ h1 {
 .axie-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 15px;
+    gap: 8px;
     justify-content: center;
-    padding: 10px;
+    padding: 5px;
 }
 
 .axie-container {
@@ -323,21 +333,21 @@ h1 {
 .add-axie {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-    padding-top: 20px;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 2px solid rgba(255,255,255,0.2);
 }
 
 .add-axie input {
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
     border: 2px solid rgba(255,255,255,0.2);
-    width: 180px;
+    width: 140px;
     background: rgba(255,255,255,0.15);
     backdrop-filter: blur(10px);
     color: #fff;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.3s ease;
 }
 
@@ -357,11 +367,11 @@ h1 {
     color: #667eea;
     font-weight: 700;
     border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
+    font-size: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
@@ -508,7 +518,17 @@ h1 {
     }
 }
 
+@media (max-width: 1200px) {
+    #teamsContainer {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 900px) {
+    #teamsContainer {
+        grid-template-columns: 1fr;
+    }
+    
     .axie-grid {
         grid-template-columns: repeat(4, 1fr);
     }
@@ -521,11 +541,11 @@ h1 {
     
     .axie-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
+        gap: 8px;
     }
     
     .team-name {
-        font-size: 22px;
+        font-size: 16px;
     }
     
     .add-team input[type="text"] {
@@ -540,12 +560,12 @@ h1 {
     }
     
     .add-axie input {
-        width: 140px;
+        width: 120px;
     }
     
     .team-header {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         align-items: flex-start;
     }
     
@@ -920,6 +940,8 @@ function createTeamElement(team, teamId) {
     const header = document.createElement('div');
     header.className = 'team-header';
     header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamId})">🗑️ Eliminar equipo</button>`;
+    // El header no debe ser draggable para poder hacer click en botones
+    header.style.pointerEvents = 'auto';
     teamDiv.appendChild(header);
 
     const grid = document.createElement('div');
@@ -941,7 +963,74 @@ function createTeamElement(team, teamId) {
     `;
     teamDiv.appendChild(addAxieDiv);
     
+    // Agregar funcionalidad de drag and drop
+    setupDragAndDrop(teamDiv);
+    
     return teamDiv;
+}
+
+// Configurar drag and drop para un equipo
+function setupDragAndDrop(teamCard) {
+    teamCard.draggable = true;
+    
+    // Prevenir drag desde el header (para poder hacer click en botones)
+    const header = teamCard.querySelector('.team-header');
+    if (header) {
+        header.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        header.addEventListener('dragstart', (e) => {
+            e.stopPropagation();
+        });
+    }
+    
+    teamCard.addEventListener('dragstart', (e) => {
+        // No arrastrar si el click viene del header
+        if (e.target.closest('.team-header')) {
+            e.preventDefault();
+            return;
+        }
+        teamCard.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
+    });
+    
+    teamCard.addEventListener('dragend', () => {
+        teamCard.classList.remove('dragging');
+        saveTeams(); // Guardar el nuevo orden
+    });
+    
+    teamCard.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const afterElement = getDragAfterElement(e.currentTarget.parentElement, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        
+        if (dragging && dragging !== e.currentTarget) {
+            if (afterElement == null) {
+                e.currentTarget.parentElement.appendChild(dragging);
+            } else {
+                e.currentTarget.parentElement.insertBefore(dragging, afterElement);
+            }
+        }
+    });
+}
+
+// Helper para encontrar la posición después del elemento arrastrado
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.team-card:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
 // Renderizar equipos en el DOM (solo cuando es necesario re-renderizar todo)
