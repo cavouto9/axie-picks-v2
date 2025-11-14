@@ -387,6 +387,8 @@ h1 {
     margin-bottom: 12px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--border-color);
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .team-name {
@@ -396,6 +398,27 @@ h1 {
     letter-spacing: -0.5px;
     color: var(--text-primary);
     transition: color 0.3s ease;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.team-name:hover {
+    background: var(--bg-input);
+}
+
+.team-name-input {
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--bg-input);
+    border: 2px solid var(--border-hover);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: 100%;
+    max-width: 300px;
+    outline: none;
 }
 
 .team-header button {
@@ -409,6 +432,7 @@ h1 {
     transition: all 0.3s ease;
     font-size: 12px;
     backdrop-filter: blur(10px);
+    white-space: nowrap;
 }
 
 .team-header button:hover {
@@ -416,6 +440,18 @@ h1 {
     border-color: rgba(255, 71, 87, 0.5);
     color: #ff4757;
     transform: scale(1.05);
+}
+
+.team-header button.clear-axies-btn {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.5);
+    color: #ffc107;
+}
+
+.team-header button.clear-axies-btn:hover {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.7);
+    color: #ffc107;
 }
 
 .axie-grid {
@@ -1372,7 +1408,33 @@ function createTeamElement(team, teamId) {
 
     const header = document.createElement('div');
     header.className = 'team-header';
-    header.innerHTML = `<span class="team-name">${team.name}</span> <button onclick="deleteTeam(${teamId})">🗑️ Eliminar equipo</button>`;
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'team-name';
+    nameSpan.textContent = team.name;
+    nameSpan.title = 'Haz doble clic para editar';
+    nameSpan.addEventListener('dblclick', () => editTeamName(teamId));
+    
+    const editBtn = document.createElement('button');
+    editBtn.innerHTML = '✏️ Editar';
+    editBtn.onclick = () => editTeamName(teamId);
+    editBtn.style.background = 'rgba(102, 126, 234, 0.2)';
+    editBtn.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+    editBtn.style.color = '#667eea';
+    
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-axies-btn';
+    clearBtn.innerHTML = '🗑️ Limpiar Axies';
+    clearBtn.onclick = () => clearAllAxies(teamId);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '🗑️ Eliminar equipo';
+    deleteBtn.onclick = () => deleteTeam(teamId);
+    
+    header.appendChild(nameSpan);
+    header.appendChild(editBtn);
+    header.appendChild(clearBtn);
+    header.appendChild(deleteBtn);
     header.style.pointerEvents = 'auto';
     teamDiv.appendChild(header);
 
@@ -1390,8 +1452,8 @@ function createTeamElement(team, teamId) {
     const addAxieDiv = document.createElement('div');
     addAxieDiv.className = 'add-axie';
     addAxieDiv.innerHTML = `
-        <input type="text" placeholder="ID Axie" id="axieInput-${teamId}" onkeypress="if(event.key==='Enter') addAxie(${teamId})">
-        <button onclick="addAxie(${teamId})">➕ Agregar Axie</button>
+        <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamId}" onkeypress="if(event.key==='Enter') addAxie(${teamId})">
+        <button onclick="addAxie(${teamId})">➕ Agregar Axie(s)</button>
     `;
     teamDiv.appendChild(addAxieDiv);
     
@@ -1679,7 +1741,33 @@ function addTeam() {
 
     const header = document.createElement('div');
     header.className = 'team-header';
-    header.innerHTML = `<span class="team-name">${teamName}</span> <button onclick="deleteTeam(${teamCount})">🗑️ Eliminar equipo</button>`;
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'team-name';
+    nameSpan.textContent = teamName;
+    nameSpan.title = 'Haz doble clic para editar';
+    nameSpan.addEventListener('dblclick', () => editTeamName(teamCount));
+    
+    const editBtn = document.createElement('button');
+    editBtn.innerHTML = '✏️ Editar';
+    editBtn.onclick = () => editTeamName(teamCount);
+    editBtn.style.background = 'rgba(102, 126, 234, 0.2)';
+    editBtn.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+    editBtn.style.color = '#667eea';
+    
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-axies-btn';
+    clearBtn.innerHTML = '🗑️ Limpiar Axies';
+    clearBtn.onclick = () => clearAllAxies(teamCount);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '🗑️ Eliminar equipo';
+    deleteBtn.onclick = () => deleteTeam(teamCount);
+    
+    header.appendChild(nameSpan);
+    header.appendChild(editBtn);
+    header.appendChild(clearBtn);
+    header.appendChild(deleteBtn);
     teamDiv.appendChild(header);
 
     const grid = document.createElement('div');
@@ -1697,8 +1785,8 @@ function addTeam() {
     const addAxieDiv = document.createElement('div');
     addAxieDiv.className = 'add-axie';
     addAxieDiv.innerHTML = `
-        <input type="text" placeholder="ID Axie" id="axieInput-${teamCount}" onkeypress="if(event.key==='Enter') addAxie(${teamCount})">
-        <button onclick="addAxie(${teamCount})">➕ Agregar Axie</button>
+        <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamCount}" onkeypress="if(event.key==='Enter') addAxie(${teamCount})">
+        <button onclick="addAxie(${teamCount})">➕ Agregar Axie(s)</button>
     `;
     teamDiv.appendChild(addAxieDiv);
 
@@ -1827,12 +1915,92 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
 
 function addAxie(teamId) {
     const input = document.getElementById(`axieInput-${teamId}`);
-    const id = input.value.trim();
-    if(!id) return;
+    const idsRaw = input.value.trim();
+    if(!idsRaw) return;
+    
+    const ids = idsRaw.split(/[\s,]+/).filter(id => id.trim());
+    if(ids.length === 0) return;
+    
     const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
     const grid = teamDiv.querySelector('.axie-grid');
-    addAxieToGrid(id, grid);
+    
+    ids.forEach(id => {
+        const trimmedId = id.trim();
+        if(trimmedId) {
+            addAxieToGrid(trimmedId, grid);
+        }
+    });
+    
     input.value = '';
+}
+
+function editTeamName(teamId) {
+    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if(!teamDiv) return;
+    
+    const nameSpan = teamDiv.querySelector('.team-name');
+    if(!nameSpan) return;
+    
+    const currentName = nameSpan.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'team-name-input';
+    input.value = currentName;
+    
+    nameSpan.style.display = 'none';
+    nameSpan.parentElement.insertBefore(input, nameSpan);
+    input.focus();
+    input.select();
+    
+    const saveName = () => {
+        const newName = input.value.trim();
+        if(newName && newName !== currentName) {
+            nameSpan.textContent = newName;
+            saveTeams();
+        }
+        input.remove();
+        nameSpan.style.display = '';
+    };
+    
+    input.addEventListener('blur', saveName);
+    input.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            saveName();
+        } else if(e.key === 'Escape') {
+            input.remove();
+            nameSpan.style.display = '';
+        }
+    });
+}
+
+function clearAllAxies(teamId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar TODOS los axies de este equipo?')) {
+        return;
+    }
+    
+    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if(!teamDiv) return;
+    
+    const grid = teamDiv.querySelector('.axie-grid');
+    if(!grid) return;
+    
+    const axies = grid.querySelectorAll('.axie-container');
+    if(axies.length === 0) {
+        alert('Este equipo no tiene axies para eliminar');
+        return;
+    }
+    
+    axies.forEach(axie => {
+        axie.style.transition = 'all 0.3s ease';
+        axie.style.transform = 'scale(0) rotate(180deg)';
+        axie.style.opacity = '0';
+    });
+    
+    setTimeout(() => {
+        axies.forEach(axie => axie.remove());
+        saveTeams();
+    }, 300);
 }
 
 function deleteTeam(teamId) {
