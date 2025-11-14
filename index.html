@@ -974,13 +974,33 @@ function showMainContent() {
         overlay.classList.add('hidden');
     }
     
-    // Cargar equipos solo después del login
-    if (typeof loadTeams === 'function') {
-        loadTeams();
+    // Función para inicializar el contenido
+    function initializeContent() {
+        // Verificar que los elementos del DOM existan
+        const teamsContainer = document.getElementById('teamsContainer');
+        if (!teamsContainer) {
+            console.warn('⚠️ teamsContainer no encontrado, reintentando...');
+            setTimeout(initializeContent, 100);
+            return;
+        }
+        
+        // Cargar equipos solo después del login
+        if (typeof loadTeams === 'function') {
+            console.log('🔄 Cargando equipos...');
+            loadTeams();
+        } else {
+            console.warn('⚠️ loadTeams no está definida, reintentando...');
+            setTimeout(initializeContent, 100);
+            return;
+        }
+        
+        if (typeof setupContainerDragAndDrop === 'function') {
+            setupContainerDragAndDrop();
+        }
     }
-    if (typeof setupContainerDragAndDrop === 'function') {
-        setupContainerDragAndDrop();
-    }
+    
+    // Esperar un momento para que el DOM esté completamente listo
+    setTimeout(initializeContent, 150);
 }
 
 function handleLogin(event) {
@@ -1014,9 +1034,6 @@ function handleLogin(event) {
         }, 3000);
     }
 }
-
-// Verificar login al cargar
-checkLogin();
 
 // Sistema de temas
 function initTheme() {
@@ -1784,7 +1801,20 @@ function deleteTeam(teamId) {
     }
 }
 
-// loadTeams() y setupContainerDragAndDrop() se llaman desde showMainContent() después del login
+// Verificar login al cargar - después de que todo esté inicializado
+// Usar DOMContentLoaded para asegurar que el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            checkLogin();
+        }, 200);
+    });
+} else {
+    // Si el DOM ya está cargado, ejecutar después de un breve delay
+    setTimeout(() => {
+        checkLogin();
+    }, 200);
+}
 </script>
 
 </body>
