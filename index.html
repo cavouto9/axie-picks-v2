@@ -1190,6 +1190,8 @@ let db = null;
 let isFirebaseConfigured = false;
 let isSyncing = false;
 let realtimeListener = null;
+let lastSaveTime = 0;
+let pendingSave = false;
 
 function isFirebaseConfigValid() {
     return firebaseConfig.apiKey && 
@@ -1324,36 +1326,39 @@ function getTeamsData() {
 
 function saveTeams() {
     const teams = getTeamsData();
+    const now = Date.now();
     
     localStorage.setItem('axieTeams', JSON.stringify(teams));
     
     if (isFirebaseConfigured && db) {
+        lastSaveTime = now;
+        pendingSave = true;
+        
         clearTimeout(window.saveTimeout);
         window.saveTimeout = setTimeout(() => {
-            if (!isSyncing) {
+            if (!isSyncing && pendingSave) {
+                pendingSave = false;
                 isSyncing = true;
                 updateConnectionStatus('syncing');
                 
                 db.ref(DB_PATH).set(teams)
                     .then(() => {
-                        console.log('✅ Datos guardados en Firebase');
                         setTimeout(() => {
                             isSyncing = false;
                             updateConnectionStatus('connected');
-                        }, 300);
+                        }, 500);
                     })
                     .catch((error) => {
                         console.error('❌ Error al guardar en Firebase:', error);
                         isSyncing = false;
                         updateConnectionStatus('connected');
                     });
-            } else {
-                console.log('⏳ Esperando a que termine la sincronización...');
+            } else if (pendingSave) {
                 setTimeout(() => {
                     saveTeams();
-                }, 500);
+                }, 800);
             }
-        }, 200);
+        }, 500);
     }
 }
 
@@ -1689,16 +1694,23 @@ function setupRealtimeListener() {
     console.log('🔄 Configurando listener en tiempo real...');
     
     let lastUpdateTime = Date.now();
+    let updateTimeout = null;
     
     realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
         const teams = snapshot.val();
         const now = Date.now();
         
-        if (now - lastUpdateTime < 200) {
+        if (now - lastUpdateTime < 500) {
+            return;
+        }
+        
+        const timeSinceLastSave = now - lastSaveTime;
+        if (timeSinceLastSave < 1000 && isSyncing) {
             return;
         }
         
         const normalizeData = (data) => {
+            if (!data) return '';
             return JSON.stringify(
                 (data || []).map(team => ({
                     id: team.id,
@@ -1706,45 +1718,33 @@ function setupRealtimeListener() {
                     axies: (team.axies || []).map(axie => ({
                         id: axie.id,
                         status: axie.status || ''
-                    })).sort((a, b) => a.id.localeCompare(b.id))
+                    })).sort((a, b) => (a.id || '').localeCompare(b.id || ''))
                 })).sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')))
             );
         };
         
-        const currentData = normalizeData(getTeamsData());
-        const newData = normalizeData(teams);
-        
-        if (currentData !== newData) {
-            if (isSyncing) {
-                console.log('⏳ Esperando a que termine la sincronización local...');
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(() => {
+            const currentData = normalizeData(getTeamsData());
+            const newData = normalizeData(teams);
+            
+            if (currentData !== newData && newData !== '') {
+                if (isSyncing && timeSinceLastSave < 2000) {
+                    return;
+                }
+                
+                isSyncing = true;
+                lastUpdateTime = now;
+                pendingSave = false;
+                
+                updateTeamsIncremental(teams || [], true);
+                localStorage.setItem('axieTeams', JSON.stringify(teams || []));
+                
                 setTimeout(() => {
-                    const retryData = normalizeData(getTeamsData());
-                    const retryNewData = normalizeData(teams);
-                    if (retryData !== retryNewData && !isSyncing) {
-                        isSyncing = true;
-                        updateTeamsIncremental(teams || [], true);
-                        localStorage.setItem('axieTeams', JSON.stringify(teams || []));
-                        setTimeout(() => { isSyncing = false; }, 300);
-                    }
+                    isSyncing = false;
                 }, 600);
-                return;
             }
-            
-            console.log('🔄 Cambio detectado en tiempo real');
-            console.log('📊 Datos actuales:', currentData.length, 'caracteres');
-            console.log('📊 Datos nuevos:', newData.length, 'caracteres');
-            
-            isSyncing = true;
-            lastUpdateTime = now;
-            
-            updateTeamsIncremental(teams || [], true);
-            
-            localStorage.setItem('axieTeams', JSON.stringify(teams || []));
-            
-            setTimeout(() => {
-                isSyncing = false;
-            }, 400);
-        }
+        }, 300);
     }, (error) => {
         console.error('❌ Error en el listener de Firebase:', error);
         updateConnectionStatus('disconnected');
