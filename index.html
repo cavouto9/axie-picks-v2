@@ -387,7 +387,7 @@ h1 {
     margin-bottom: 12px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--border-color);
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
@@ -426,11 +426,11 @@ h1 {
     color: var(--text-primary);
     font-weight: 600;
     border: 2px solid var(--border-color);
-    padding: 8px 14px;
-    border-radius: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 12px;
+    font-size: 11px;
     backdrop-filter: blur(10px);
     white-space: nowrap;
 }
@@ -1415,24 +1415,27 @@ function createTeamElement(team, teamId) {
     nameSpan.title = 'Haz doble clic para editar';
     nameSpan.addEventListener('dblclick', () => editTeamName(teamId));
     
-    const editBtn = document.createElement('button');
-    editBtn.innerHTML = '✏️ Editar';
-    editBtn.onclick = () => editTeamName(teamId);
-    editBtn.style.background = 'rgba(102, 126, 234, 0.2)';
-    editBtn.style.borderColor = 'rgba(102, 126, 234, 0.5)';
-    editBtn.style.color = '#667eea';
+    let lastTap = 0;
+    nameSpan.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+            e.preventDefault();
+            editTeamName(teamId);
+        }
+        lastTap = currentTime;
+    });
     
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
-    clearBtn.innerHTML = '🗑️ Limpiar Axies';
+    clearBtn.innerHTML = '🗑️ Limpiar';
     clearBtn.onclick = () => clearAllAxies(teamId);
     
     const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '🗑️ Eliminar equipo';
+    deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamId);
     
     header.appendChild(nameSpan);
-    header.appendChild(editBtn);
     header.appendChild(clearBtn);
     header.appendChild(deleteBtn);
     header.style.pointerEvents = 'auto';
@@ -1748,24 +1751,27 @@ function addTeam() {
     nameSpan.title = 'Haz doble clic para editar';
     nameSpan.addEventListener('dblclick', () => editTeamName(teamCount));
     
-    const editBtn = document.createElement('button');
-    editBtn.innerHTML = '✏️ Editar';
-    editBtn.onclick = () => editTeamName(teamCount);
-    editBtn.style.background = 'rgba(102, 126, 234, 0.2)';
-    editBtn.style.borderColor = 'rgba(102, 126, 234, 0.5)';
-    editBtn.style.color = '#667eea';
+    let lastTap = 0;
+    nameSpan.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+            e.preventDefault();
+            editTeamName(teamCount);
+        }
+        lastTap = currentTime;
+    });
     
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
-    clearBtn.innerHTML = '🗑️ Limpiar Axies';
+    clearBtn.innerHTML = '🗑️ Limpiar';
     clearBtn.onclick = () => clearAllAxies(teamCount);
     
     const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '🗑️ Eliminar equipo';
+    deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamCount);
     
     header.appendChild(nameSpan);
-    header.appendChild(editBtn);
     header.appendChild(clearBtn);
     header.appendChild(deleteBtn);
     teamDiv.appendChild(header);
