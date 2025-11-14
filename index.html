@@ -95,60 +95,24 @@ body::before {
 }
 
 .theme-toggle {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    z-index: 2147483647 !important;
-    background: var(--bg-card) !important;
+    /* Estilos base - los estilos inline de JS tienen prioridad */
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
-    border: 2px solid var(--border-color) !important;
-    border-radius: 50px !important;
-    padding: 12px 16px !important;
-    cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease !important;
-    box-shadow: var(--shadow-md) !important;
-    color: var(--text-primary) !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    line-height: 1 !important;
-    margin: 0 !important;
-    padding: 12px 16px !important;
-    width: auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -ms-transform: none !important;
-    -o-transform: none !important;
-    pointer-events: auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    float: none !important;
-    clear: none !important;
-    vertical-align: baseline !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-    clip: auto !important;
-    clip-path: none !important;
-}
-
-/* Forzar posición fija en todos los contextos */
-html .theme-toggle,
-body .theme-toggle,
-* .theme-toggle {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    box-shadow: var(--shadow-md);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+    font-family: inherit;
 }
 
 .theme-toggle:hover {
@@ -726,23 +690,8 @@ h1 {
     }
     
     .theme-toggle {
-        position: fixed !important;
-        top: 10px !important;
-        right: 10px !important;
-        left: auto !important;
-        bottom: auto !important;
-        padding: 10px 14px !important;
-        font-size: 12px !important;
-        z-index: 2147483647 !important;
-        transform: none !important;
-        -webkit-transform: none !important;
-        -moz-transform: none !important;
-        margin: 0 !important;
-    }
-    
-    .theme-toggle:hover {
-        transform: none !important;
-        -webkit-transform: none !important;
+        font-size: 12px;
+        padding: 10px 14px;
     }
     
     .theme-toggle-icon {
@@ -782,11 +731,6 @@ h1 {
 </head>
 <body>
 
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
-    <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-    <span id="themeText">Modo Oscuro</span>
-</button>
-
 <h1>⚔️ Axie Teams Manager</h1>
 
 <div id="statusIndicator" class="status-indicator disconnected">
@@ -806,41 +750,105 @@ h1 {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// Forzar posición fija del botón de tema
-function forceThemeButtonPosition() {
-    const themeButton = document.querySelector('.theme-toggle');
-    if (themeButton) {
-        themeButton.style.position = 'fixed';
-        themeButton.style.top = window.innerWidth <= 500 ? '10px' : '20px';
-        themeButton.style.right = window.innerWidth <= 500 ? '10px' : '20px';
-        themeButton.style.left = 'auto';
-        themeButton.style.bottom = 'auto';
-        themeButton.style.transform = 'none';
-        themeButton.style.webkitTransform = 'none';
-        themeButton.style.mozTransform = 'none';
-        themeButton.style.zIndex = '2147483647';
-    }
+// Crear botón de tema dinámicamente y mantenerlo fijo
+let themeButton = null;
+
+function createThemeButton() {
+    if (themeButton) return;
+    
+    themeButton = document.createElement('button');
+    themeButton.className = 'theme-toggle';
+    themeButton.setAttribute('aria-label', 'Cambiar tema');
+    themeButton.innerHTML = '<span class="theme-toggle-icon" id="themeIcon">🌙</span><span id="themeText">Modo Oscuro</span>';
+    themeButton.onclick = toggleTheme;
+    
+    // Aplicar estilos inline directamente
+    Object.assign(themeButton.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        left: 'auto',
+        bottom: 'auto',
+        zIndex: '2147483647',
+        margin: '0',
+        padding: '12px 16px',
+        transform: 'none',
+        webkitTransform: 'none',
+        mozTransform: 'none',
+        msTransform: 'none',
+        oTransform: 'none',
+        pointerEvents: 'auto',
+        visibility: 'visible',
+        opacity: '1'
+    });
+    
+    document.body.appendChild(themeButton);
+    forceThemeButtonPosition();
 }
 
-// Ejecutar al cargar y en cada scroll/resize
-window.addEventListener('load', forceThemeButtonPosition);
-window.addEventListener('scroll', forceThemeButtonPosition);
-window.addEventListener('resize', forceThemeButtonPosition);
-document.addEventListener('DOMContentLoaded', forceThemeButtonPosition);
+function forceThemeButtonPosition() {
+    if (!themeButton) return;
+    
+    const isMobile = window.innerWidth <= 500;
+    const topPos = isMobile ? '10px' : '20px';
+    const rightPos = isMobile ? '10px' : '20px';
+    const padding = isMobile ? '10px 14px' : '12px 16px';
+    const fontSize = isMobile ? '12px' : '14px';
+    
+    // Forzar posición usando requestAnimationFrame para máxima prioridad
+    requestAnimationFrame(() => {
+        // Usar setProperty para máxima compatibilidad
+        themeButton.style.setProperty('position', 'fixed', 'important');
+        themeButton.style.setProperty('top', topPos, 'important');
+        themeButton.style.setProperty('right', rightPos, 'important');
+        themeButton.style.setProperty('left', 'auto', 'important');
+        themeButton.style.setProperty('bottom', 'auto', 'important');
+        themeButton.style.setProperty('z-index', '2147483647', 'important');
+        themeButton.style.setProperty('margin', '0', 'important');
+        themeButton.style.setProperty('padding', padding, 'important');
+        themeButton.style.setProperty('font-size', fontSize, 'important');
+        themeButton.style.setProperty('transform', 'none', 'important');
+        themeButton.style.setProperty('-webkit-transform', 'none', 'important');
+        themeButton.style.setProperty('-moz-transform', 'none', 'important');
+        themeButton.style.setProperty('-ms-transform', 'none', 'important');
+        themeButton.style.setProperty('-o-transform', 'none', 'important');
+        themeButton.style.setProperty('pointer-events', 'auto', 'important');
+        themeButton.style.setProperty('visibility', 'visible', 'important');
+        themeButton.style.setProperty('opacity', '1', 'important');
+    });
+}
 
-// Observador para detectar cambios en el DOM
-const observer = new MutationObserver(() => {
-    forceThemeButtonPosition();
+// Crear botón inmediatamente
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', createThemeButton);
+} else {
+    createThemeButton();
+}
+
+// Forzar posición en cada evento
+window.addEventListener('load', forceThemeButtonPosition);
+window.addEventListener('scroll', () => {
+    requestAnimationFrame(forceThemeButtonPosition);
 });
-observer.observe(document.body, { 
-    childList: true, 
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['style', 'class']
-});
+window.addEventListener('resize', forceThemeButtonPosition);
+
+// Loop continuo para mantener posición (último recurso)
+let lastScrollY = window.scrollY;
+function maintainButtonPosition() {
+    if (window.scrollY !== lastScrollY) {
+        lastScrollY = window.scrollY;
+        forceThemeButtonPosition();
+    }
+    requestAnimationFrame(maintainButtonPosition);
+}
+requestAnimationFrame(maintainButtonPosition);
 
 // Sistema de temas
 function initTheme() {
+    // Asegurar que el botón existe antes de inicializar
+    if (!themeButton) {
+        createThemeButton();
+    }
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeUI(savedTheme);
@@ -858,15 +866,19 @@ function toggleTheme() {
 }
 
 function updateThemeUI(theme) {
+    if (!themeButton) return;
+    
     const themeIcon = document.getElementById('themeIcon');
     const themeText = document.getElementById('themeText');
     
-    if (theme === 'light') {
-        themeIcon.textContent = '☀️';
-        themeText.textContent = 'Modo Claro';
-    } else {
-        themeIcon.textContent = '🌙';
-        themeText.textContent = 'Modo Oscuro';
+    if (themeIcon && themeText) {
+        if (theme === 'light') {
+            themeIcon.textContent = '☀️';
+            themeText.textContent = 'Modo Claro';
+        } else {
+            themeIcon.textContent = '🌙';
+            themeText.textContent = 'Modo Oscuro';
+        }
     }
 }
 
