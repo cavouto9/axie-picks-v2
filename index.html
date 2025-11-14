@@ -1331,28 +1331,30 @@ function getTeamsData() {
     const container = document.getElementById('teamsContainer');
     if (!container) return teams;
     
-    const teamCards = Array.from(container.querySelectorAll('.team-card'));
+    const teamCards = Array.from(container.children).filter(child => child.classList.contains('team-card'));
+    
     teamCards.forEach(teamDiv => {
         const teamId = teamDiv.dataset.teamId;
         const nameElement = teamDiv.querySelector('.team-name');
         if (!nameElement) return;
         
-        const name = nameElement.innerText;
+        const name = nameElement.innerText || nameElement.textContent || '';
         const axies = [];
-        teamDiv.querySelectorAll('.axie-container').forEach(axieDiv => {
+        const axieContainers = teamDiv.querySelectorAll('.axie-container');
+        axieContainers.forEach(axieDiv => {
             const id = axieDiv.dataset.axieId;
             if (!id) return;
             let status = '';
             if(axieDiv.classList.contains('banned')) status = 'banned';
             else if(axieDiv.classList.contains('picked')) status = 'picked';
-            axies.push({id, status});
+            axies.push({id: String(id), status: status});
         });
-        teams.push({id: teamId, name, axies});
+        teams.push({id: String(teamId), name: name, axies: axies});
     });
     return teams;
 }
 
-function saveTeams() {
+function saveTeams(immediate = false) {
     const teams = getTeamsData();
     const now = Date.now();
     
@@ -1363,9 +1365,11 @@ function saveTeams() {
         pendingSave = true;
         
         clearTimeout(window.saveTimeout);
-        window.saveTimeout = setTimeout(() => {
-            if (!isSyncing && pendingSave) {
+        
+        const saveToFirebase = () => {
+            if (pendingSave) {
                 pendingSave = false;
+                const wasSyncing = isSyncing;
                 isSyncing = true;
                 updateConnectionStatus('syncing');
                 
@@ -1374,19 +1378,21 @@ function saveTeams() {
                         setTimeout(() => {
                             isSyncing = false;
                             updateConnectionStatus('connected');
-                        }, 500);
+                        }, 300);
                     })
                     .catch((error) => {
                         console.error('❌ Error al guardar en Firebase:', error);
                         isSyncing = false;
                         updateConnectionStatus('connected');
                     });
-            } else if (pendingSave) {
-                setTimeout(() => {
-                    saveTeams();
-                }, 800);
             }
-        }, 500);
+        };
+        
+        if (immediate) {
+            saveToFirebase();
+        } else {
+            window.saveTimeout = setTimeout(saveToFirebase, 300);
+        }
     }
 }
 
@@ -1426,15 +1432,16 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         });
     }
     
-    newTeams.forEach(newTeam => {
-        const teamId = newTeam.id !== undefined ? newTeam.id : newTeam.name;
+    newTeams.forEach((newTeam, teamIndex) => {
+        const teamId = String(newTeam.id !== undefined ? newTeam.id : newTeam.name);
         const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
         
         if (!existingTeamDiv) {
             const teamDiv = createTeamElement(newTeam, teamId);
-            const insertIndex = newOrder.indexOf(String(teamId));
-            if (insertIndex >= 0 && insertIndex < container.children.length) {
-                container.insertBefore(teamDiv, container.children[insertIndex]);
+            const insertIndex = newOrder.indexOf(teamId);
+            const currentChildren = Array.from(container.children).filter(c => c.classList.contains('team-card'));
+            if (insertIndex >= 0 && insertIndex < currentChildren.length) {
+                container.insertBefore(teamDiv, currentChildren[insertIndex]);
             } else {
                 container.appendChild(teamDiv);
             }
@@ -1442,41 +1449,46 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         }
         
         const nameElement = existingTeamDiv.querySelector('.team-name');
-        if (nameElement && nameElement.innerText !== newTeam.name) {
-            nameElement.innerText = newTeam.name;
+        if (nameElement) {
+            const currentName = nameElement.innerText || nameElement.textContent || '';
+            const newName = String(newTeam.name || '');
+            if (currentName !== newName) {
+                nameElement.innerText = newName;
+            }
         }
         
         const grid = existingTeamDiv.querySelector('.axie-grid');
         if (grid) {
             const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
-            const currentAxieIds = currentAxies.map(axie => axie.dataset.axieId);
-            const newAxieIds = (newTeam.axies || []).map(axie => axie.id).filter(id => id);
+            const currentAxieIds = currentAxies.map(axie => String(axie.dataset.axieId || ''));
+            const newAxieIds = (newTeam.axies || []).map(axie => String(axie.id || '')).filter(id => id);
             
             currentAxies.forEach(axieDiv => {
-                const axieId = axieDiv.dataset.axieId;
+                const axieId = String(axieDiv.dataset.axieId || '');
                 if (!newAxieIds.includes(axieId)) {
                     axieDiv.remove();
                 }
             });
             
             newTeam.axies.forEach(axie => {
-                if (!axie.id) return;
+                const axieId = String(axie.id || '');
+                if (!axieId) return;
                 
-                const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axie.id}"]`);
+                const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axieId}"]`);
                 
                 if (!existingAxie) {
-                    addAxieToGrid(axie.id, grid, axie.status || '', false);
+                    addAxieToGrid(axieId, grid, String(axie.status || ''), false);
                 } else {
                     const currentLocalStatus = existingAxie.classList.contains('banned') ? 'banned' : 
                                               existingAxie.classList.contains('picked') ? 'picked' : '';
-                    const newRemoteStatus = axie.status || '';
+                    const newRemoteStatus = String(axie.status || '');
                     
                     if (currentLocalStatus !== newRemoteStatus) {
                         const lastStatusChange = existingAxie.dataset.lastStatusChange ? parseInt(existingAxie.dataset.lastStatusChange) : 0;
                         const timeSinceLastChange = Date.now() - lastStatusChange;
                         const timeSinceLastSave = Date.now() - lastSaveTime;
                         
-                        if (timeSinceLastChange > 3000 && (timeSinceLastSave > 2000 || !isSyncing)) {
+                        if (timeSinceLastChange > 1500 || (timeSinceLastSave > 1000 && !isSyncing)) {
                             existingAxie.classList.remove('banned', 'picked');
                             if (newRemoteStatus === 'banned') {
                                 existingAxie.classList.add('banned');
@@ -1955,12 +1967,13 @@ function setupRealtimeListener() {
         const teams = snapshot.val();
         const now = Date.now();
         
-        if (now - lastUpdateTime < 500) {
+        if (now - lastUpdateTime < 300) {
             return;
         }
         
         const timeSinceLastSave = now - lastSaveTime;
-        if (timeSinceLastSave < 2000 && isSyncing) {
+        
+        if (timeSinceLastSave < 1000 && isSyncing) {
             return;
         }
         
@@ -1968,26 +1981,27 @@ function setupRealtimeListener() {
             if (!data) return '';
             const normalized = (data || []).map((team, index) => ({
                 index: index,
-                id: team.id,
-                name: team.name,
+                id: String(team.id || ''),
+                name: String(team.name || ''),
                 axies: (team.axies || []).map(axie => ({
-                    id: axie.id,
-                    status: axie.status || ''
-                })).sort((a, b) => (a.id || '').localeCompare(b.id || ''))
+                    id: String(axie.id || ''),
+                    status: String(axie.status || '')
+                })).sort((a, b) => a.id.localeCompare(b.id))
             }));
             return JSON.stringify(normalized);
         };
         
         clearTimeout(updateTimeout);
         updateTimeout = setTimeout(() => {
+            if (timeSinceLastSave < 800 && isSyncing) {
+                return;
+            }
+            
             const currentData = normalizeData(getTeamsData());
             const newData = normalizeData(teams);
             
             if (currentData !== newData && newData !== '') {
-                if (isSyncing && timeSinceLastSave < 3000) {
-                    return;
-                }
-                
+                const wasSyncing = isSyncing;
                 isSyncing = true;
                 lastUpdateTime = now;
                 pendingSave = false;
@@ -1997,9 +2011,9 @@ function setupRealtimeListener() {
                 
                 setTimeout(() => {
                     isSyncing = false;
-                }, 600);
+                }, 400);
             }
-        }, 300);
+        }, 200);
     }, (error) => {
         console.error('❌ Error en el listener de Firebase:', error);
         updateConnectionStatus('disconnected');
@@ -2208,13 +2222,9 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         axieDiv.dataset.lastStatusChange = Date.now().toString();
         
         setTimeout(() => {
-            isSyncing = true;
             lastSaveTime = Date.now();
-            saveTeams();
-            setTimeout(() => {
-                isSyncing = false;
-            }, 2000);
-        }, 50);
+            saveTeams(true);
+        }, 100);
     });
 
     const deleteBtn = document.createElement('button');
