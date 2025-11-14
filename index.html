@@ -1328,9 +1328,16 @@ function showRealtimeNotification(message) {
 
 function getTeamsData() {
     const teams = [];
-    document.querySelectorAll('.team-card').forEach(teamDiv => {
+    const container = document.getElementById('teamsContainer');
+    if (!container) return teams;
+    
+    const teamCards = Array.from(container.querySelectorAll('.team-card'));
+    teamCards.forEach(teamDiv => {
         const teamId = teamDiv.dataset.teamId;
-        const name = teamDiv.querySelector('.team-name').innerText;
+        const nameElement = teamDiv.querySelector('.team-name');
+        if (!nameElement) return;
+        
+        const name = nameElement.innerText;
         const axies = [];
         teamDiv.querySelectorAll('.axie-container').forEach(axieDiv => {
             const id = axieDiv.dataset.axieId;
@@ -1392,13 +1399,45 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         return;
     }
     
+    const currentOrder = currentTeams.map(card => card.dataset.teamId);
+    const newOrder = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
+    
+    const orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(newOrder);
+    
+    if (orderChanged && isRealtimeUpdate) {
+        const teamMap = new Map();
+        currentTeams.forEach(teamDiv => {
+            teamMap.set(teamDiv.dataset.teamId, teamDiv);
+        });
+        
+        newOrder.forEach((teamId, index) => {
+            const teamDiv = teamMap.get(teamId);
+            if (teamDiv) {
+                const currentIndex = Array.from(container.children).indexOf(teamDiv);
+                if (currentIndex !== index) {
+                    const targetElement = container.children[index];
+                    if (targetElement) {
+                        container.insertBefore(teamDiv, targetElement);
+                    } else {
+                        container.appendChild(teamDiv);
+                    }
+                }
+            }
+        });
+    }
+    
     newTeams.forEach(newTeam => {
         const teamId = newTeam.id !== undefined ? newTeam.id : newTeam.name;
         const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
         
         if (!existingTeamDiv) {
             const teamDiv = createTeamElement(newTeam, teamId);
-            container.appendChild(teamDiv);
+            const insertIndex = newOrder.indexOf(String(teamId));
+            if (insertIndex >= 0 && insertIndex < container.children.length) {
+                container.insertBefore(teamDiv, container.children[insertIndex]);
+            } else {
+                container.appendChild(teamDiv);
+            }
             return;
         }
         
@@ -1439,7 +1478,7 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
         }
     });
     
-    const newTeamIds = newTeams.map(t => t.id !== undefined ? t.id : t.name);
+    const newTeamIds = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
     currentTeams.forEach(teamDiv => {
         const teamId = teamDiv.dataset.teamId;
         if (!newTeamIds.includes(teamId)) {
@@ -1534,6 +1573,9 @@ function setupDragAndDrop(teamCard) {
             element.addEventListener('mousedown', (e) => {
                 e.stopPropagation();
             });
+            element.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+            });
             element.addEventListener('dragstart', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -1541,57 +1583,109 @@ function setupDragAndDrop(teamCard) {
         }
     });
     
-    teamCard.addEventListener('dragstart', (e) => {
-        const target = e.target;
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let isDragging = false;
+    let touchTarget = null;
+    
+    const canDrag = (target) => {
+        if (!target) return false;
         if (target.tagName === 'BUTTON' || 
             target.tagName === 'INPUT' ||
-            target.closest('button.axie-delete')) {
-            e.preventDefault();
-            e.stopPropagation();
+            target.closest('button.axie-delete') ||
+            target.closest('.axie-container') ||
+            target.closest('.team-header button') ||
+            target.closest('.add-axie')) {
+            return false;
+        }
+        return true;
+    };
+    
+    const startDrag = (e, touchEvent = null) => {
+        const target = touchEvent ? touchEvent.target : (e ? e.target : null);
+        if (!target || !canDrag(target)) {
             return false;
         }
         
+        const container = document.getElementById('teamsContainer');
+        const currentOrder = Array.from(container.querySelectorAll('.team-card')).map(card => card.dataset.teamId);
+        teamCard.dataset.previousOrder = JSON.stringify(currentOrder);
+        
         teamCard.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
-        e.dataTransfer.setData('text/html', teamCard.outerHTML);
-    });
+        isDragging = true;
+        
+        if (e && e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
+        }
+        
+        return true;
+    };
     
-    teamCard.addEventListener('dragend', () => {
+    const endDrag = () => {
+        if (!isDragging) return;
+        
         teamCard.classList.remove('dragging');
         document.querySelectorAll('.team-card').forEach(card => {
             card.classList.remove('drag-over');
         });
-        saveTeams();
-    });
+        
+        const container = document.getElementById('teamsContainer');
+        const currentOrder = Array.from(container.querySelectorAll('.team-card')).map(card => card.dataset.teamId);
+        const previousOrder = teamCard.dataset.previousOrder ? JSON.parse(teamCard.dataset.previousOrder) : null;
+        
+        if (previousOrder && JSON.stringify(currentOrder) !== JSON.stringify(previousOrder)) {
+            setTimeout(() => {
+                saveTeams();
+            }, 100);
+        }
+        
+        isDragging = false;
+        touchTarget = null;
+    };
     
-    teamCard.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+    const handleDragOver = (clientY, clientX = null) => {
+        if (!isDragging) return;
         
         const dragging = document.querySelector('.dragging');
         if (!dragging || dragging === teamCard) return;
         
         const box = teamCard.getBoundingClientRect();
         const centerY = box.top + box.height / 2;
+        const container = teamCard.parentElement;
         
-        if (e.clientY < centerY) {
-            teamCard.parentElement.insertBefore(dragging, teamCard);
+        if (clientY < centerY) {
+            container.insertBefore(dragging, teamCard);
         } else {
-            const nextCard = Array.from(teamCard.parentElement.children).find(
-                child => child.classList.contains('team-card') && 
-                child !== teamCard && 
-                child !== dragging &&
-                child.getBoundingClientRect().top > box.top
-            );
-            if (nextCard) {
-                teamCard.parentElement.insertBefore(dragging, nextCard);
+            const nextSibling = teamCard.nextElementSibling;
+            if (nextSibling && nextSibling.classList.contains('team-card') && nextSibling !== dragging) {
+                container.insertBefore(dragging, nextSibling);
             } else {
-                teamCard.parentElement.appendChild(dragging);
+                container.appendChild(dragging);
             }
         }
         
         teamCard.classList.add('drag-over');
+    };
+    
+    teamCard.addEventListener('dragstart', (e) => {
+        if (!startDrag(e)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+    
+    teamCard.addEventListener('dragend', () => {
+        endDrag();
+    });
+    
+    teamCard.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'move';
+        }
+        handleDragOver(e.clientY);
     });
     
     teamCard.addEventListener('dragleave', () => {
@@ -1601,7 +1695,115 @@ function setupDragAndDrop(teamCard) {
     teamCard.addEventListener('drop', (e) => {
         e.preventDefault();
         teamCard.classList.remove('drag-over');
-        saveTeams();
+        
+        setTimeout(() => {
+            saveTeams();
+        }, 50);
+    });
+    
+    teamCard.addEventListener('touchstart', (e) => {
+        if (!canDrag(e.target)) return;
+        
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchTarget = e.target;
+        isDragging = false;
+        
+        const touchDelay = setTimeout(() => {
+            if (startDrag(null, e)) {
+                teamCard.style.transition = 'none';
+            }
+        }, 150);
+        
+        teamCard.dataset.touchDelay = touchDelay;
+    }, { passive: true });
+    
+    teamCard.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        const deltaY = Math.abs(touch.clientY - touchStartY);
+        const deltaX = Math.abs(touch.clientX - touchStartX);
+        
+        if (!isDragging && teamCard.dataset.touchDelay) {
+            if (deltaY > 15 || deltaX > 15) {
+                clearTimeout(teamCard.dataset.touchDelay);
+                delete teamCard.dataset.touchDelay;
+                
+                if (startDrag(null, e)) {
+                    teamCard.style.transition = 'none';
+                    e.preventDefault();
+                }
+            }
+        }
+        
+        if (isDragging) {
+            e.preventDefault();
+            
+            const offsetY = touch.clientY - touchStartY;
+            teamCard.style.transform = `translateY(${offsetY}px)`;
+            teamCard.style.opacity = '0.8';
+            teamCard.style.zIndex = '1000';
+            
+            const container = document.getElementById('teamsContainer');
+            const cards = Array.from(container.querySelectorAll('.team-card:not(.dragging)'));
+            let afterElement = null;
+            
+            const currentY = touch.clientY;
+            
+            for (const card of cards) {
+                const box = card.getBoundingClientRect();
+                const centerY = box.top + box.height / 2;
+                
+                if (currentY < centerY) {
+                    afterElement = card;
+                    break;
+                }
+            }
+            
+            if (afterElement && afterElement !== teamCard.nextSibling) {
+                container.insertBefore(teamCard, afterElement);
+                touchStartY = touch.clientY - offsetY;
+            } else if (!afterElement && cards.length > 0) {
+                const lastCard = cards[cards.length - 1];
+                if (teamCard !== lastCard.nextSibling) {
+                    container.insertBefore(teamCard, lastCard.nextSibling);
+                    touchStartY = touch.clientY - offsetY;
+                }
+            } else if (cards.length === 0) {
+                container.appendChild(teamCard);
+                touchStartY = touch.clientY - offsetY;
+            }
+        }
+    }, { passive: false });
+    
+    teamCard.addEventListener('touchend', (e) => {
+        if (teamCard.dataset.touchDelay) {
+            clearTimeout(teamCard.dataset.touchDelay);
+            delete teamCard.dataset.touchDelay;
+        }
+        
+        if (isDragging) {
+            e.preventDefault();
+            teamCard.style.transform = '';
+            teamCard.style.opacity = '';
+            teamCard.style.zIndex = '';
+            teamCard.style.transition = '';
+            endDrag();
+        }
+    });
+    
+    teamCard.addEventListener('touchcancel', () => {
+        if (teamCard.dataset.touchDelay) {
+            clearTimeout(teamCard.dataset.touchDelay);
+            delete teamCard.dataset.touchDelay;
+        }
+        
+        if (isDragging) {
+            teamCard.style.transform = '';
+            teamCard.style.opacity = '';
+            teamCard.style.zIndex = '';
+            teamCard.style.transition = '';
+            endDrag();
+        }
     });
 }
 
@@ -1609,10 +1811,7 @@ function setupContainerDragAndDrop() {
     const container = document.getElementById('teamsContainer');
     if (!container) return;
     
-    container.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        
+    const handleContainerDragOver = (clientY) => {
         const dragging = document.querySelector('.dragging');
         if (!dragging) return;
         
@@ -1623,7 +1822,7 @@ function setupContainerDragAndDrop() {
             const box = card.getBoundingClientRect();
             const centerY = box.top + box.height / 2;
             
-            if (e.clientY < centerY) {
+            if (clientY < centerY) {
                 afterElement = card;
                 break;
             }
@@ -1631,15 +1830,37 @@ function setupContainerDragAndDrop() {
         
         if (afterElement) {
             container.insertBefore(dragging, afterElement);
+        } else if (cards.length > 0) {
+            container.insertBefore(dragging, cards[cards.length - 1].nextSibling);
         } else {
             container.appendChild(dragging);
         }
+    };
+    
+    container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'move';
+        }
+        handleContainerDragOver(e.clientY);
     });
     
     container.addEventListener('drop', (e) => {
         e.preventDefault();
-        saveTeams();
+        
+        setTimeout(() => {
+            saveTeams();
+        }, 50);
     });
+    
+    container.addEventListener('touchmove', (e) => {
+        const dragging = document.querySelector('.dragging');
+        if (dragging) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleContainerDragOver(touch.clientY);
+        }
+    }, { passive: false });
 }
 
 function renderTeams(teams, isRealtimeUpdate = false) {
@@ -1733,16 +1954,16 @@ function setupRealtimeListener() {
         
         const normalizeData = (data) => {
             if (!data) return '';
-            return JSON.stringify(
-                (data || []).map(team => ({
-                    id: team.id,
-                    name: team.name,
-                    axies: (team.axies || []).map(axie => ({
-                        id: axie.id,
-                        status: axie.status || ''
-                    })).sort((a, b) => (a.id || '').localeCompare(b.id || ''))
-                })).sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')))
-            );
+            const normalized = (data || []).map((team, index) => ({
+                index: index,
+                id: team.id,
+                name: team.name,
+                axies: (team.axies || []).map(axie => ({
+                    id: axie.id,
+                    status: axie.status || ''
+                })).sort((a, b) => (a.id || '').localeCompare(b.id || ''))
+            }));
+            return JSON.stringify(normalized);
         };
         
         clearTimeout(updateTimeout);
