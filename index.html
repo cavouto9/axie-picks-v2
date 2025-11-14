@@ -187,12 +187,31 @@ h1 {
     background: rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    /* Quitar efectos de focus/touch en móvil */
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
 }
 
 .axie-container:hover {
     transform: scale(1.1) rotate(2deg);
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     z-index: 10;
+}
+
+.axie-container:active,
+.axie-container:focus {
+    outline: none !important;
+    transform: scale(1.05);
+    /* Evitar que se vea torcido en móvil */
+    -webkit-transform: scale(1.05);
+}
+
+.axie-container:active:focus {
+    outline: none !important;
 }
 
 .axie-container img {
@@ -344,9 +363,9 @@ h1 {
 }
 
 .status-indicator {
-    position: fixed;
-    top: 20px;
-    right: 20px;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
     padding: 10px 20px;
     border-radius: 25px;
     font-size: 14px;
@@ -358,6 +377,9 @@ h1 {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
+    /* Asegurar que no se mueva con el scroll */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .status-indicator.connected {
@@ -816,9 +838,10 @@ function renderTeams(teams, isRealtimeUpdate = false) {
         teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
     });
     
-    if (isRealtimeUpdate) {
-        showRealtimeNotification('Equipos actualizados en tiempo real');
-    }
+    // Notificaciones de tiempo real deshabilitadas por solicitud del usuario
+    // if (isRealtimeUpdate) {
+    //     showRealtimeNotification('Equipos actualizados en tiempo real');
+    // }
 }
 
 // Cargar equipos (desde Firebase o localStorage)
@@ -1069,6 +1092,12 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
             axieDiv.classList.remove('picked');
         } else {
             axieDiv.classList.add('banned');
+        }
+        
+        // Quitar el focus para evitar que la imagen se vea torcida en móvil
+        axieDiv.blur();
+        if (document.activeElement) {
+            document.activeElement.blur();
         }
         
         // SIEMPRE guardar cuando el usuario hace cambios (no cuando viene de tiempo real)
