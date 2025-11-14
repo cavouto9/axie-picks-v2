@@ -388,7 +388,13 @@ h1 {
     padding-bottom: 10px;
     border-bottom: 2px solid var(--border-color);
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+
+.team-header .team-buttons {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .team-name {
@@ -869,9 +875,17 @@ h1 {
     }
     
     .team-header {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    
+    .team-name {
+        width: 100%;
+        margin-bottom: 4px;
+    }
+    
+    .team-header .team-buttons {
+        width: 100%;
+        justify-content: flex-start;
     }
     
     .status-indicator {
@@ -1426,6 +1440,9 @@ function createTeamElement(team, teamId) {
         lastTap = currentTime;
     });
     
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'team-buttons';
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -1435,9 +1452,11 @@ function createTeamElement(team, teamId) {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamId);
     
+    buttonsContainer.appendChild(clearBtn);
+    buttonsContainer.appendChild(deleteBtn);
+    
     header.appendChild(nameSpan);
-    header.appendChild(clearBtn);
-    header.appendChild(deleteBtn);
+    header.appendChild(buttonsContainer);
     header.style.pointerEvents = 'auto';
     teamDiv.appendChild(header);
 
@@ -1762,6 +1781,9 @@ function addTeam() {
         lastTap = currentTime;
     });
     
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'team-buttons';
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -1771,9 +1793,11 @@ function addTeam() {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamCount);
     
+    buttonsContainer.appendChild(clearBtn);
+    buttonsContainer.appendChild(deleteBtn);
+    
     header.appendChild(nameSpan);
-    header.appendChild(clearBtn);
-    header.appendChild(deleteBtn);
+    header.appendChild(buttonsContainer);
     teamDiv.appendChild(header);
 
     const grid = document.createElement('div');
