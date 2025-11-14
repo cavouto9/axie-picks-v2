@@ -739,24 +739,33 @@ function saveTeams() {
         // Usar un pequeño delay para evitar conflictos con el listener
         clearTimeout(window.saveTimeout);
         window.saveTimeout = setTimeout(() => {
+            // Solo guardar si no estamos en medio de una actualización desde tiempo real
             if (!isSyncing) {
                 isSyncing = true;
                 updateConnectionStatus('syncing');
                 
                 db.ref(DB_PATH).set(teams)
                     .then(() => {
+                        console.log('✅ Datos guardados en Firebase');
+                        // Resetear flag más rápido para permitir que el listener funcione
                         setTimeout(() => {
                             isSyncing = false;
                             updateConnectionStatus('connected');
-                        }, 500);
+                        }, 300);
                     })
                     .catch((error) => {
-                        console.error('Error al guardar en Firebase:', error);
+                        console.error('❌ Error al guardar en Firebase:', error);
                         isSyncing = false;
                         updateConnectionStatus('connected');
                     });
+            } else {
+                // Si estamos sincronizando, intentar de nuevo en un momento
+                console.log('⏳ Esperando a que termine la sincronización...');
+                setTimeout(() => {
+                    saveTeams();
+                }, 500);
             }
-        }, 300);
+        }, 200);
     }
 }
 
@@ -875,29 +884,73 @@ function setupRealtimeListener() {
     
     console.log('🔄 Configurando listener en tiempo real...');
     
+    // Variable para rastrear el último timestamp de actualización
+    let lastUpdateTime = Date.now();
+    
     // Crear nuevo listener
     realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
         const teams = snapshot.val();
+        const now = Date.now();
+        
+        // Solo procesar si han pasado al menos 200ms desde la última actualización
+        if (now - lastUpdateTime < 200) {
+            return;
+        }
         
         // Comparar con los datos actuales para evitar actualizaciones innecesarias
-        const currentData = JSON.stringify(getTeamsData());
-        const newData = JSON.stringify(teams || []);
+        // Normalizar los datos para comparación (ordenar por ID y limpiar)
+        const normalizeData = (data) => {
+            return JSON.stringify(
+                (data || []).map(team => ({
+                    id: team.id,
+                    name: team.name,
+                    axies: (team.axies || []).map(axie => ({
+                        id: axie.id,
+                        status: axie.status || ''
+                    })).sort((a, b) => a.id.localeCompare(b.id))
+                })).sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')))
+            );
+        };
         
-        // Solo actualizar si los datos son diferentes y no estamos sincronizando
-        if (teams && currentData !== newData && !isSyncing) {
+        const currentData = normalizeData(getTeamsData());
+        const newData = normalizeData(teams);
+        
+        // Solo actualizar si los datos son diferentes
+        if (currentData !== newData) {
+            // Si estamos sincronizando, esperar un poco más
+            if (isSyncing) {
+                console.log('⏳ Esperando a que termine la sincronización local...');
+                setTimeout(() => {
+                    // Reintentar después de un delay
+                    const retryData = normalizeData(getTeamsData());
+                    const retryNewData = normalizeData(teams);
+                    if (retryData !== retryNewData && !isSyncing) {
+                        isSyncing = true;
+                        renderTeams(teams || [], true);
+                        localStorage.setItem('axieTeams', JSON.stringify(teams || []));
+                        setTimeout(() => { isSyncing = false; }, 300);
+                    }
+                }, 600);
+                return;
+            }
+            
             console.log('🔄 Cambio detectado en tiempo real');
+            console.log('📊 Datos actuales:', currentData.length, 'caracteres');
+            console.log('📊 Datos nuevos:', newData.length, 'caracteres');
+            
             isSyncing = true;
-            renderTeams(teams, true);
+            lastUpdateTime = now;
+            
+            // Renderizar los nuevos datos (esto creará elementos con event listeners que guardan)
+            renderTeams(teams || [], true);
+            
             // Actualizar localStorage
-            localStorage.setItem('axieTeams', JSON.stringify(teams));
+            localStorage.setItem('axieTeams', JSON.stringify(teams || []));
             
             // Resetear flag después de un delay
             setTimeout(() => {
                 isSyncing = false;
-            }, 800);
-        } else if (teams && currentData === newData) {
-            // Los datos son iguales, no hacer nada
-            console.log('✓ Datos sincronizados');
+            }, 400);
         }
     }, (error) => {
         console.error('❌ Error en el listener de Firebase:', error);
@@ -1005,15 +1058,24 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     };
 
     axieDiv.addEventListener('click', () => {
-        if(axieDiv.classList.contains('banned')) {
+        // Marcar que este cambio viene del usuario (no de tiempo real)
+        const wasBanned = axieDiv.classList.contains('banned');
+        const wasPicked = axieDiv.classList.contains('picked');
+        
+        if(wasBanned) {
             axieDiv.classList.remove('banned');
             axieDiv.classList.add('picked');
-        } else if(axieDiv.classList.contains('picked')) {
+        } else if(wasPicked) {
             axieDiv.classList.remove('picked');
         } else {
             axieDiv.classList.add('banned');
         }
-        if (shouldSave) saveTeams();
+        
+        // SIEMPRE guardar cuando el usuario hace cambios (no cuando viene de tiempo real)
+        // Usar setTimeout para evitar conflictos con el listener
+        setTimeout(() => {
+            saveTeams();
+        }, 100);
     });
 
     const deleteBtn = document.createElement('button');
@@ -1026,7 +1088,10 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         axieDiv.style.opacity = '0';
         setTimeout(() => {
             axieDiv.remove();
-            if (shouldSave) saveTeams();
+            // SIEMPRE guardar cuando el usuario elimina (no cuando viene de tiempo real)
+            setTimeout(() => {
+                saveTeams();
+            }, 100);
         }, 300);
     };
 
@@ -1061,7 +1126,10 @@ function deleteTeam(teamId) {
         teamDiv.style.opacity = '0';
         setTimeout(() => {
             teamDiv.remove();
-            saveTeams();
+            // Guardar inmediatamente después de eliminar
+            setTimeout(() => {
+                saveTeams();
+            }, 100);
             // Mostrar mensaje de estado vacío si no hay equipos
             if (container.children.length === 0) {
                 container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
