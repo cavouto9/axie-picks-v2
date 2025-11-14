@@ -342,7 +342,7 @@ h1 {
     padding: 0 20px;
     max-width: 1800px;
     margin: 0 auto;
-    grid-auto-rows: min-content;
+    grid-auto-rows: auto;
 }
 
 .team-card {
@@ -356,8 +356,7 @@ h1 {
     border: 1px solid var(--border-color);
     cursor: grab;
     position: relative;
-    min-height: fit-content;
-    height: fit-content;
+    align-self: start;
 }
 
 .team-card:active {
@@ -653,6 +652,7 @@ h1 {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 2px solid var(--border-color);
+    flex-wrap: wrap;
 }
 
 .add-axie input {
@@ -695,6 +695,20 @@ h1 {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     background: var(--bg-button-hover);
+}
+
+.add-axie button.copy-ids-btn {
+    background: rgba(102, 126, 234, 0.2);
+    border: 2px solid rgba(102, 126, 234, 0.5);
+    color: #667eea;
+    font-size: 11px;
+    padding: 6px 12px;
+}
+
+.add-axie button.copy-ids-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.7);
+    color: #667eea;
 }
 
 .empty-state {
@@ -1494,6 +1508,7 @@ function createTeamElement(team, teamId) {
     addAxieDiv.innerHTML = `
         <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamId}" onkeypress="if(event.key==='Enter') addAxie(${teamId})">
         <button onclick="addAxie(${teamId})">➕ Agregar Axie(s)</button>
+        <button class="copy-ids-btn" onclick="copyAllAxieIds(${teamId})">📋 Copiar todas las IDs</button>
     `;
     teamDiv.appendChild(addAxieDiv);
     
@@ -1830,6 +1845,7 @@ function addTeam() {
     addAxieDiv.innerHTML = `
         <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamCount}" onkeypress="if(event.key==='Enter') addAxie(${teamCount})">
         <button onclick="addAxie(${teamCount})">➕ Agregar Axie(s)</button>
+        <button class="copy-ids-btn" onclick="copyAllAxieIds(${teamCount})">📋 Copiar todas las IDs</button>
     `;
     teamDiv.appendChild(addAxieDiv);
 
@@ -1847,7 +1863,7 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
     if (existingAxies.some(axie => axie.dataset.axieId === id)) {
         if (shouldSave) alert("⚠️ Este Axie ya está en el equipo");
-        return;
+        return false;
     }
     
     const axieDiv = document.createElement('div');
@@ -1863,21 +1879,46 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     img.alt = `Axie ${id}`;
     img.className = 'loading';
     
+    let imageValid = false;
+    let validationTimeout = null;
+    
     img.onload = () => {
         img.classList.remove('loading');
         img.classList.remove('error');
+        imageValid = true;
+        if (validationTimeout) clearTimeout(validationTimeout);
     };
     
     img.onerror = () => {
-        img.classList.remove('loading');
-        img.classList.add('error');
         const altImg = new Image();
         altImg.src = `https://assets.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
         altImg.onload = () => {
             img.src = altImg.src;
+            img.classList.remove('loading');
             img.classList.remove('error');
+            imageValid = true;
+            if (validationTimeout) clearTimeout(validationTimeout);
+        };
+        altImg.onerror = () => {
+            img.classList.remove('loading');
+            img.classList.add('error');
+            if (shouldSave) {
+                alert(`⚠️ ID inválida: ${id}\nEl Axie con este ID no existe.`);
+            }
+            axieDiv.remove();
+            imageValid = false;
+            if (validationTimeout) clearTimeout(validationTimeout);
         };
     };
+    
+    validationTimeout = setTimeout(() => {
+        if (!imageValid) {
+            if (shouldSave) {
+                alert(`⚠️ ID inválida: ${id}\nNo se pudo cargar la imagen del Axie.`);
+            }
+            axieDiv.remove();
+        }
+    }, 5000);
 
     imageWrapper.appendChild(img);
 
@@ -1944,12 +1985,13 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         }, 300);
     };
 
+    imageWrapper.appendChild(img);
     axieDiv.appendChild(imageWrapper);
     axieDiv.appendChild(idLabel);
     axieDiv.appendChild(deleteBtn);
     grid.appendChild(axieDiv);
     
-    if (shouldSave) saveTeams();
+    return true;
 }
 
 function addAxie(teamId) {
@@ -1965,22 +2007,85 @@ function addAxie(teamId) {
     
     const validIds = ids.filter(id => id.trim());
     let addedCount = 0;
+    let validCount = 0;
     
     validIds.forEach((id, index) => {
         const trimmedId = id.trim();
         setTimeout(() => {
-            addAxieToGrid(trimmedId, grid, '', false);
+            const result = addAxieToGrid(trimmedId, grid, '', false);
+            if(result !== false) {
+                validCount++;
+            }
             addedCount++;
             
             if(addedCount === validIds.length) {
                 setTimeout(() => {
-                    saveTeams();
+                    if(validCount > 0) {
+                        saveTeams();
+                    }
                 }, 300);
             }
         }, index * 30);
     });
     
     input.value = '';
+}
+
+function copyAllAxieIds(teamId) {
+    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if(!teamDiv) return;
+    
+    const grid = teamDiv.querySelector('.axie-grid');
+    if(!grid) return;
+    
+    const axies = Array.from(grid.querySelectorAll('.axie-container'));
+    if(axies.length === 0) {
+        alert('Este equipo no tiene axies para copiar');
+        return;
+    }
+    
+    const ids = axies.map(axie => axie.dataset.axieId).filter(id => id);
+    const idsString = ids.join(', ');
+    
+    const updateButton = (button) => {
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Copiado!';
+        button.style.background = 'rgba(46, 213, 115, 0.2)';
+        button.style.borderColor = 'rgba(46, 213, 115, 0.5)';
+        button.style.color = '#2ed573';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.borderColor = '';
+            button.style.color = '';
+        }, 2000);
+    };
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(idsString).then(() => {
+            const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+            if(button) updateButton(button);
+        }).catch(() => {
+            const textarea = document.createElement('textarea');
+            textarea.value = idsString;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+            if(button) updateButton(button);
+        });
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = idsString;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+        if(button) updateButton(button);
+    }
 }
 
 function editTeamName(teamId) {
