@@ -619,12 +619,35 @@ try {
     console.error('   1. Todas las credenciales estén correctamente copiadas');
     console.error('   2. Las comillas " estén alrededor de cada valor');
     console.error('   3. La Realtime Database esté creada en Firebase');
+    console.error('   4. Las reglas de seguridad permitan lectura/escritura');
     updateConnectionStatus('disconnected');
     showFirebaseWarning();
 }
 
 let teamCount = 0;
 const DB_PATH = 'axieTeams';
+
+// Función de prueba para verificar conexión
+function testFirebaseConnection() {
+    if (!isFirebaseConfigured || !db) {
+        console.error('❌ Firebase no está configurado');
+        return;
+    }
+    
+    console.log('🧪 Probando conexión con Firebase...');
+    db.ref(DB_PATH).once('value')
+        .then((snapshot) => {
+            console.log('✅ Conexión exitosa!');
+            console.log('📊 Datos actuales:', snapshot.val());
+        })
+        .catch((error) => {
+            console.error('❌ Error de conexión:', error);
+            console.error('💡 Verifica las reglas de seguridad en Firebase Console');
+        });
+}
+
+// Exponer función de prueba globalmente para debugging
+window.testFirebase = testFirebaseConnection;
 
 // Función para actualizar el estado de conexión
 function updateConnectionStatus(status) {
@@ -712,20 +735,28 @@ function saveTeams() {
     localStorage.setItem('axieTeams', JSON.stringify(teams));
     
     // Guardar en Firebase si está configurado
-    if (isFirebaseConfigured && db && !isSyncing) {
-        isSyncing = true;
-        updateConnectionStatus('syncing');
-        
-        db.ref(DB_PATH).set(teams)
-            .then(() => {
-                isSyncing = false;
-                updateConnectionStatus('connected');
-            })
-            .catch((error) => {
-                console.error('Error al guardar en Firebase:', error);
-                isSyncing = false;
-                updateConnectionStatus('connected');
-            });
+    if (isFirebaseConfigured && db) {
+        // Usar un pequeño delay para evitar conflictos con el listener
+        clearTimeout(window.saveTimeout);
+        window.saveTimeout = setTimeout(() => {
+            if (!isSyncing) {
+                isSyncing = true;
+                updateConnectionStatus('syncing');
+                
+                db.ref(DB_PATH).set(teams)
+                    .then(() => {
+                        setTimeout(() => {
+                            isSyncing = false;
+                            updateConnectionStatus('connected');
+                        }, 500);
+                    })
+                    .catch((error) => {
+                        console.error('Error al guardar en Firebase:', error);
+                        isSyncing = false;
+                        updateConnectionStatus('connected');
+                    });
+            }
+        }, 300);
     }
 }
 
@@ -832,27 +863,48 @@ function loadTeams() {
 
 // Configurar listener en tiempo real
 function setupRealtimeListener() {
-    if (!isFirebaseConfigured || !db) return;
+    if (!isFirebaseConfigured || !db) {
+        console.warn('⚠️ No se puede configurar el listener: Firebase no está configurado');
+        return;
+    }
     
     // Remover listener anterior si existe
     if (realtimeListener) {
         db.ref(DB_PATH).off('value', realtimeListener);
     }
     
+    console.log('🔄 Configurando listener en tiempo real...');
+    
     // Crear nuevo listener
     realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
         const teams = snapshot.val();
-        if (teams && !isSyncing) {
-            // Solo actualizar si no estamos sincronizando (evitar loops)
+        
+        // Comparar con los datos actuales para evitar actualizaciones innecesarias
+        const currentData = JSON.stringify(getTeamsData());
+        const newData = JSON.stringify(teams || []);
+        
+        // Solo actualizar si los datos son diferentes y no estamos sincronizando
+        if (teams && currentData !== newData && !isSyncing) {
+            console.log('🔄 Cambio detectado en tiempo real');
             isSyncing = true;
             renderTeams(teams, true);
             // Actualizar localStorage
             localStorage.setItem('axieTeams', JSON.stringify(teams));
+            
+            // Resetear flag después de un delay
             setTimeout(() => {
                 isSyncing = false;
-            }, 100);
+            }, 800);
+        } else if (teams && currentData === newData) {
+            // Los datos son iguales, no hacer nada
+            console.log('✓ Datos sincronizados');
         }
+    }, (error) => {
+        console.error('❌ Error en el listener de Firebase:', error);
+        updateConnectionStatus('disconnected');
     });
+    
+    console.log('✅ Listener en tiempo real configurado correctamente');
 }
 
 // Agregar equipo nuevo
