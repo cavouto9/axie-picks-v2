@@ -205,13 +205,22 @@ h1 {
 .axie-container:active,
 .axie-container:focus {
     outline: none !important;
-    transform: scale(1.05);
-    /* Evitar que se vea torcido en móvil */
-    -webkit-transform: scale(1.05);
+    /* Sin transformación para evitar movimiento en móvil */
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
 .axie-container:active:focus {
     outline: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* Prevenir cualquier transformación no deseada después del click */
+.axie-container:active *,
+.axie-container:focus * {
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
 .axie-container img {
@@ -220,6 +229,13 @@ h1 {
     object-fit: contain;
     transition: all 0.3s ease;
     background: transparent;
+    /* Prevenir movimiento en móvil */
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none; /* La imagen no captura eventos, solo el contenedor */
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
 .axie-container img.loading {
@@ -363,6 +379,7 @@ h1 {
 }
 
 .status-indicator {
+    display: none !important; /* Ocultar completamente el indicador */
     position: fixed !important;
     top: 20px !important;
     right: 20px !important;
@@ -373,7 +390,6 @@ h1 {
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 1000;
-    display: flex;
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
@@ -531,6 +547,25 @@ h1 {
         flex-direction: column;
         gap: 10px;
         align-items: flex-start;
+    }
+    
+    /* Prevenir movimiento de imágenes en móvil */
+    .axie-container {
+        transform: none !important;
+        -webkit-transform: none !important;
+    }
+    
+    .axie-container:active,
+    .axie-container:focus,
+    .axie-container:active:focus {
+        transform: none !important;
+        -webkit-transform: none !important;
+    }
+    
+    .axie-container img {
+        transform: none !important;
+        -webkit-transform: none !important;
+        will-change: auto;
     }
 }
 
@@ -1080,7 +1115,22 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         };
     };
 
-    axieDiv.addEventListener('click', () => {
+    axieDiv.addEventListener('click', (e) => {
+        // Prevenir comportamiento por defecto
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Quitar focus inmediatamente antes de hacer cambios
+        axieDiv.blur();
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
+        
+        // Forzar quitar focus de cualquier elemento
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
+        
         // Marcar que este cambio viene del usuario (no de tiempo real)
         const wasBanned = axieDiv.classList.contains('banned');
         const wasPicked = axieDiv.classList.contains('picked');
@@ -1094,11 +1144,21 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
             axieDiv.classList.add('banned');
         }
         
-        // Quitar el focus para evitar que la imagen se vea torcida en móvil
-        axieDiv.blur();
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
+        // Resetear cualquier transformación que pueda quedar
+        axieDiv.style.transform = '';
+        axieDiv.style.webkitTransform = '';
+        
+        // Quitar focus nuevamente después de los cambios
+        setTimeout(() => {
+            axieDiv.blur();
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+            // Forzar que el body tenga el focus
+            if (document.body) {
+                document.body.focus();
+            }
+        }, 50);
         
         // SIEMPRE guardar cuando el usuario hace cambios (no cuando viene de tiempo real)
         // Usar setTimeout para evitar conflictos con el listener
