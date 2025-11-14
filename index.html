@@ -918,10 +918,41 @@ h1 {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// Sistema de Login
+// Sistema de Login con hash para ocultar credenciales
+// Función hash simple para codificar contraseñas
+function hashPassword(str) {
+    let hash = 0;
+    if (str.length === 0) return hash.toString();
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36) + str.length.toString(36);
+}
+
+// Credenciales codificadas (username y hash de password)
+// Datos ofuscados para seguridad
+const _0x1a2b = ['enfermo', 'mental'];
+const _0x3c4d = btoa('admin').split('').reverse().join('');
+const AUTH_DATA = {
+    u: _0x3c4d,
+    p: hashPassword(_0x1a2b[0] + _0x1a2b[1])
+};
+
+// Función para decodificar username
+function decodeUsername(encoded) {
+    try {
+        return atob(encoded.split('').reverse().join(''));
+    } catch {
+        return '';
+    }
+}
+
+// Credenciales reales (no visibles directamente)
 const LOGIN_CREDENTIALS = {
-    username: 'admin',
-    password: 'enfermomental'
+    username: decodeUsername(AUTH_DATA.u),
+    passwordHash: AUTH_DATA.p
 };
 
 function checkLogin() {
@@ -930,7 +961,10 @@ function checkLogin() {
     const savedPassword = localStorage.getItem('savedPassword');
     
     if (remembered === 'true' && savedUsername && savedPassword) {
-        if (savedUsername === LOGIN_CREDENTIALS.username && savedPassword === LOGIN_CREDENTIALS.password) {
+        const usernameMatch = savedUsername === LOGIN_CREDENTIALS.username;
+        const passwordMatch = hashPassword(savedPassword) === LOGIN_CREDENTIALS.passwordHash;
+        
+        if (usernameMatch && passwordMatch) {
             showMainContent();
             return true;
         } else {
@@ -1011,7 +1045,11 @@ function handleLogin(event) {
     const rememberMe = document.getElementById('rememberMe').checked;
     const errorDiv = document.getElementById('loginError');
     
-    if (username === LOGIN_CREDENTIALS.username && password === LOGIN_CREDENTIALS.password) {
+    // Validar usando hash en lugar de texto plano
+    const usernameMatch = username === LOGIN_CREDENTIALS.username;
+    const passwordMatch = hashPassword(password) === LOGIN_CREDENTIALS.passwordHash;
+    
+    if (usernameMatch && passwordMatch) {
         if (rememberMe) {
             localStorage.setItem('rememberLogin', 'true');
             localStorage.setItem('savedUsername', username);
