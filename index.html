@@ -1761,7 +1761,7 @@ function addTeam() {
         return; 
     }
 
-    const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()).slice(0,10) : [];
+    const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()) : [];
     const container = document.getElementById('teamsContainer');
     
     if (container.querySelector('.empty-state')) {
@@ -1841,10 +1841,6 @@ function addTeam() {
 }
 
 function addAxieToGrid(id, grid, status='', shouldSave = true) {
-    if(grid.children.length >= 10) { 
-        if (shouldSave) alert("⚠️ Máximo 10 Axies por equipo"); 
-        return; 
-    }
     
     const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
     if (existingAxies.some(axie => axie.dataset.axieId === id)) {
@@ -1965,20 +1961,22 @@ function addAxie(teamId) {
     const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
     const grid = teamDiv.querySelector('.axie-grid');
     
+    const validIds = ids.filter(id => id.trim());
     let addedCount = 0;
-    ids.forEach(id => {
+    
+    validIds.forEach((id, index) => {
         const trimmedId = id.trim();
-        if(trimmedId) {
+        setTimeout(() => {
             addAxieToGrid(trimmedId, grid, '', false);
             addedCount++;
-        }
+            
+            if(addedCount === validIds.length) {
+                setTimeout(() => {
+                    saveTeams();
+                }, 300);
+            }
+        }, index * 30);
     });
-    
-    if(addedCount > 0) {
-        setTimeout(() => {
-            saveTeams();
-        }, 100);
-    }
     
     input.value = '';
 }
@@ -2048,7 +2046,9 @@ function clearAllAxies(teamId) {
     
     setTimeout(() => {
         axies.forEach(axie => axie.remove());
-        saveTeams();
+        setTimeout(() => {
+            saveTeams();
+        }, 100);
     }, 300);
 }
 
