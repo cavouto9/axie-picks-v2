@@ -1467,11 +1467,23 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
                 if (!existingAxie) {
                     addAxieToGrid(axie.id, grid, axie.status || '', false);
                 } else {
-                    existingAxie.classList.remove('banned', 'picked');
-                    if (axie.status === 'banned') {
-                        existingAxie.classList.add('banned');
-                    } else if (axie.status === 'picked') {
-                        existingAxie.classList.add('picked');
+                    const currentLocalStatus = existingAxie.classList.contains('banned') ? 'banned' : 
+                                              existingAxie.classList.contains('picked') ? 'picked' : '';
+                    const newRemoteStatus = axie.status || '';
+                    
+                    if (currentLocalStatus !== newRemoteStatus) {
+                        const lastStatusChange = existingAxie.dataset.lastStatusChange ? parseInt(existingAxie.dataset.lastStatusChange) : 0;
+                        const timeSinceLastChange = Date.now() - lastStatusChange;
+                        const timeSinceLastSave = Date.now() - lastSaveTime;
+                        
+                        if (timeSinceLastChange > 3000 && (timeSinceLastSave > 2000 || !isSyncing)) {
+                            existingAxie.classList.remove('banned', 'picked');
+                            if (newRemoteStatus === 'banned') {
+                                existingAxie.classList.add('banned');
+                            } else if (newRemoteStatus === 'picked') {
+                                existingAxie.classList.add('picked');
+                            }
+                        }
                     }
                 }
             });
@@ -1948,7 +1960,7 @@ function setupRealtimeListener() {
         }
         
         const timeSinceLastSave = now - lastSaveTime;
-        if (timeSinceLastSave < 1000 && isSyncing) {
+        if (timeSinceLastSave < 2000 && isSyncing) {
             return;
         }
         
@@ -1972,7 +1984,7 @@ function setupRealtimeListener() {
             const newData = normalizeData(teams);
             
             if (currentData !== newData && newData !== '') {
-                if (isSyncing && timeSinceLastSave < 2000) {
+                if (isSyncing && timeSinceLastSave < 3000) {
                     return;
                 }
                 
@@ -2190,9 +2202,19 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
             }
         }, 50);
         
+        const currentStatus = axieDiv.classList.contains('banned') ? 'banned' : 
+                              axieDiv.classList.contains('picked') ? 'picked' : '';
+        
+        axieDiv.dataset.lastStatusChange = Date.now().toString();
+        
         setTimeout(() => {
+            isSyncing = true;
+            lastSaveTime = Date.now();
             saveTeams();
-        }, 100);
+            setTimeout(() => {
+                isSyncing = false;
+            }, 2000);
+        }, 50);
     });
 
     const deleteBtn = document.createElement('button');
