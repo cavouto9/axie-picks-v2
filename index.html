@@ -126,8 +126,12 @@ h1 {
     box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
     border: 1px solid rgba(255,255,255,0.2);
-    cursor: move;
+    cursor: grab;
     position: relative;
+}
+
+.team-card:active {
+    cursor: grabbing;
 }
 
 .team-card:hover {
@@ -140,6 +144,12 @@ h1 {
     opacity: 0.6;
     transform: rotate(2deg);
     z-index: 1000;
+}
+
+.team-card.drag-over {
+    border: 2px solid rgba(46, 213, 115, 0.8);
+    background: rgba(46, 213, 115, 0.1);
+    transform: scale(1.02);
 }
 
 .team-header {
@@ -973,30 +983,47 @@ function createTeamElement(team, teamId) {
 function setupDragAndDrop(teamCard) {
     teamCard.draggable = true;
     
-    // Prevenir drag desde el header (para poder hacer click en botones)
+    // Prevenir drag desde el header y botones (para poder hacer click)
     const header = teamCard.querySelector('.team-header');
-    if (header) {
-        header.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-        });
-        header.addEventListener('dragstart', (e) => {
-            e.stopPropagation();
-        });
-    }
+    const buttons = teamCard.querySelectorAll('button');
+    const inputs = teamCard.querySelectorAll('input');
+    
+    [header, ...buttons, ...inputs].forEach(element => {
+        if (element) {
+            element.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
+            element.addEventListener('dragstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+        }
+    });
     
     teamCard.addEventListener('dragstart', (e) => {
-        // No arrastrar si el click viene del header
-        if (e.target.closest('.team-header')) {
+        // No arrastrar si el click viene directamente de un botón o input
+        const target = e.target;
+        if (target.tagName === 'BUTTON' || 
+            target.tagName === 'INPUT' ||
+            target.closest('button.axie-delete')) {
             e.preventDefault();
-            return;
+            e.stopPropagation();
+            return false;
         }
+        
+        // Permitir arrastrar desde cualquier otra parte del card
         teamCard.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
+        e.dataTransfer.setData('text/html', teamCard.outerHTML);
     });
     
     teamCard.addEventListener('dragend', () => {
         teamCard.classList.remove('dragging');
+        // Remover clase de drop de todos los elementos
+        document.querySelectorAll('.team-card').forEach(card => {
+            card.classList.remove('drag-over');
+        });
         saveTeams(); // Guardar el nuevo orden
     });
     
@@ -1004,16 +1031,28 @@ function setupDragAndDrop(teamCard) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         
-        const afterElement = getDragAfterElement(e.currentTarget.parentElement, e.clientY);
         const dragging = document.querySelector('.dragging');
+        if (!dragging || dragging === teamCard) return;
         
-        if (dragging && dragging !== e.currentTarget) {
-            if (afterElement == null) {
-                e.currentTarget.parentElement.appendChild(dragging);
-            } else {
-                e.currentTarget.parentElement.insertBefore(dragging, afterElement);
-            }
+        const afterElement = getDragAfterElement(teamCard.parentElement, e.clientY);
+        
+        if (afterElement == null) {
+            teamCard.parentElement.appendChild(dragging);
+        } else {
+            teamCard.parentElement.insertBefore(dragging, afterElement);
         }
+        
+        teamCard.classList.add('drag-over');
+    });
+    
+    teamCard.addEventListener('dragleave', () => {
+        teamCard.classList.remove('drag-over');
+    });
+    
+    teamCard.addEventListener('drop', (e) => {
+        e.preventDefault();
+        teamCard.classList.remove('drag-over');
+        saveTeams(); // Guardar el nuevo orden
     });
 }
 
@@ -1031,6 +1070,33 @@ function getDragAfterElement(container, y) {
             return closest;
         }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Configurar drag and drop para el contenedor
+function setupContainerDragAndDrop() {
+    const container = document.getElementById('teamsContainer');
+    if (!container) return;
+    
+    container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const dragging = document.querySelector('.dragging');
+        if (!dragging) return;
+        
+        // Si no hay ningún elemento debajo, agregar al final
+        const afterElement = getDragAfterElement(container, e.clientY);
+        if (afterElement == null) {
+            container.appendChild(dragging);
+        } else {
+            container.insertBefore(dragging, afterElement);
+        }
+    });
+    
+    container.addEventListener('drop', (e) => {
+        e.preventDefault();
+        saveTeams();
+    });
 }
 
 // Renderizar equipos en el DOM (solo cuando es necesario re-renderizar todo)
@@ -1404,6 +1470,9 @@ function deleteTeam(teamId) {
 
 // Cargar equipos al inicio
 loadTeams();
+
+// Configurar drag and drop del contenedor
+setupContainerDragAndDrop();
 </script>
 
 </body>
