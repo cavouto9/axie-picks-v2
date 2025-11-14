@@ -395,6 +395,8 @@ h1 {
     display: flex;
     gap: 6px;
     flex-shrink: 0;
+    flex-wrap: nowrap;
+    align-items: center;
 }
 
 .team-name {
@@ -881,11 +883,20 @@ h1 {
     .team-name {
         width: 100%;
         margin-bottom: 4px;
+        min-width: 0;
     }
     
     .team-header .team-buttons {
-        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        width: auto;
+        min-width: 0;
         justify-content: flex-start;
+    }
+    
+    .team-header .team-buttons button {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
     
     .status-indicator {
@@ -1954,12 +1965,20 @@ function addAxie(teamId) {
     const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
     const grid = teamDiv.querySelector('.axie-grid');
     
+    let addedCount = 0;
     ids.forEach(id => {
         const trimmedId = id.trim();
         if(trimmedId) {
-            addAxieToGrid(trimmedId, grid);
+            addAxieToGrid(trimmedId, grid, '', false);
+            addedCount++;
         }
     });
+    
+    if(addedCount > 0) {
+        setTimeout(() => {
+            saveTeams();
+        }, 100);
+    }
     
     input.value = '';
 }
