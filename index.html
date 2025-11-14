@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1200, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.3, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.3, user-scalable=yes">
 <title>Axie Teams Manager</title>
 <style>
 * {
@@ -11,16 +11,10 @@
 
 html {
     position: relative;
-    overflow-x: auto;
-    overflow-y: auto;
-    min-width: 1200px;
-    width: 100%;
+    overflow-x: hidden;
 }
 
 body {
-    min-width: 1200px;
-    overflow-x: auto;
-    overflow-y: auto;
     width: 100%;
 }
 
@@ -871,50 +865,98 @@ h1 {
 @media (max-width: 900px) {
     #teamsContainer {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
     
     .axie-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+    }
+    
+    .team-card {
+        padding: 12px;
     }
 }
 
 @media (max-width: 700px) {
     h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        margin-bottom: 20px;
     }
     
     .axie-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+    
+    .axie-container {
+        padding: 4px;
+    }
+    
+    .axie-container .axie-image-wrapper {
+        padding: 2px;
+    }
+    
+    .axie-container .axie-id-label {
+        font-size: 10px;
+        padding: 2px 4px;
     }
     
     .team-name {
-        font-size: 16px;
+        font-size: 15px;
+    }
+    
+    .team-card {
+        padding: 10px;
+    }
+    
+    .add-team {
+        margin-bottom: 25px;
+        gap: 10px;
     }
     
     .add-team input[type="text"] {
         width: 100%;
-        max-width: 300px;
+        max-width: 280px;
+        padding: 12px 16px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 500px) {
     .axie-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
     }
     
-    .add-axie input {
-        width: 120px;
+    .axie-container {
+        padding: 3px;
+    }
+    
+    .axie-container .axie-image-wrapper img {
+        border-radius: 6px;
+    }
+    
+    .axie-container .axie-id-label {
+        font-size: 9px;
+        padding: 1px 3px;
+    }
+    
+    .team-card {
+        padding: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .team-name {
+        font-size: 14px;
+        width: 100%;
+        margin-bottom: 4px;
+        min-width: 0;
     }
     
     .team-header {
         flex-wrap: wrap;
-    }
-    
-    .team-name {
-        width: 100%;
-        margin-bottom: 4px;
-        min-width: 0;
+        gap: 6px;
     }
     
     .team-header .team-buttons {
@@ -923,15 +965,49 @@ h1 {
         width: auto;
         min-width: 0;
         justify-content: flex-start;
+        gap: 4px;
     }
     
     .team-header .team-buttons button {
         flex-shrink: 0;
         white-space: nowrap;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .add-axie input {
+        width: 100%;
+        max-width: 140px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .add-axie button {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .add-axie .copy-ids-btn {
+        padding: 8px 10px;
+        font-size: 11px;
     }
     
     .status-indicator {
         display: none !important;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .add-team {
+        margin-bottom: 20px;
+    }
+    
+    .add-team button {
+        padding: 12px 20px;
+        font-size: 14px;
     }
     
     .theme-toggle {
