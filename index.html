@@ -370,6 +370,40 @@ h1 {
     background: rgba(255, 71, 87, 0.3);
     border: 2px solid rgba(255, 71, 87, 0.5);
     color: #ff4757;
+    cursor: pointer;
+}
+
+.status-indicator.disconnected:hover {
+    background: rgba(255, 71, 87, 0.4);
+    transform: scale(1.05);
+}
+
+.firebase-warning {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    max-width: 350px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    background: rgba(255, 193, 7, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 193, 7, 0.4);
+    color: #ffc107;
+    font-size: 13px;
+    z-index: 999;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease-out;
+}
+
+.firebase-warning strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.firebase-warning a {
+    color: #ffc107;
+    text-decoration: underline;
 }
 
 .status-indicator.syncing {
@@ -517,31 +551,34 @@ h1 {
 
 <script>
 // ============================================
-// CONFIGURACIÓN DE FIREBASE PARA TIEMPO REAL
+// 🔥 CONFIGURACIÓN DE FIREBASE PARA TIEMPO REAL
 // ============================================
-// Para habilitar la sincronización en tiempo real, sigue estos pasos:
+// 
+// 📖 INSTRUCCIONES COMPLETAS: Lee el archivo GUIA_FIREBASE.md
 //
+// PASOS RÁPIDOS:
 // 1. Ve a https://console.firebase.google.com/
-// 2. Crea un nuevo proyecto (o selecciona uno existente)
-// 3. En el menú lateral, ve a "Build" > "Realtime Database"
-// 4. Haz clic en "Create Database"
-// 5. Selecciona "Start in test mode" (para desarrollo)
-// 6. Elige una ubicación para tu base de datos
-// 7. Ve a "Project Settings" (ícono de engranaje) > "General"
-// 8. Baja hasta "Your apps" y haz clic en el ícono </> (Web)
-// 9. Registra tu app y copia la configuración
-// 10. Pega los valores aquí abajo
+// 2. Crea un proyecto nuevo
+// 3. Ve a "Realtime Database" > "Create Database" > "Start in test mode"
+// 4. Ve a "Project Settings" (⚙️) > "General" > "Your apps" > ícono </> (Web)
+// 5. Registra tu app y copia la configuración
+// 6. Pega los valores aquí abajo (reemplaza TODO lo que dice "TU_...")
 //
-// NOTA: Si no configuras Firebase, la app funcionará en modo local (solo localStorage)
+// ⚠️ IMPORTANTE: Mantén las comillas " alrededor de cada valor
+//
+// Ejemplo de cómo debería verse:
+// apiKey: "AIzaSyB1234567890abcdefghijklmnopqrstuvwxyz",
+// authDomain: "mi-proyecto.firebaseapp.com",
+// etc...
 
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "TU_PROJECT_ID",
-    storageBucket: "TU_PROJECT_ID.appspot.com",
-    messagingSenderId: "TU_MESSAGING_SENDER_ID",
-    appId: "TU_APP_ID"
+    apiKey: "AIzaSyCLU9XKBuiZ6QyWRoy1hgN-AG_lYkKDNaA",
+    authDomain: "axie-teams-manager.firebaseapp.com",
+    databaseURL: "https://axie-teams-manager-default-rtdb.firebaseio.com",
+    projectId: "axie-teams-manager",
+    storageBucket: "axie-teams-manager.firebasestorage.app",
+    messagingSenderId: "90838655104",
+    appId: "1:90838655104:web:ba7444a58661f8330b8665"
 };
 
 // Inicializar Firebase
@@ -550,20 +587,40 @@ let isFirebaseConfigured = false;
 let isSyncing = false;
 let realtimeListener = null;
 
+// Función para verificar si Firebase está configurado
+function isFirebaseConfigValid() {
+    return firebaseConfig.apiKey && 
+           firebaseConfig.apiKey !== "TU_API_KEY" &&
+           firebaseConfig.apiKey.length > 10 &&
+           firebaseConfig.projectId && 
+           firebaseConfig.projectId !== "TU_PROJECT_ID" &&
+           firebaseConfig.databaseURL && 
+           firebaseConfig.databaseURL.includes('firebaseio.com');
+}
+
 try {
-    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "TU_API_KEY") {
+    if (isFirebaseConfigValid()) {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         isFirebaseConfigured = true;
         updateConnectionStatus('connected');
         console.log('✅ Firebase conectado correctamente');
+        console.log('🔄 Sincronización en tiempo real activada');
     } else {
-        console.warn('⚠️ Firebase no configurado. Usando modo local.');
+        console.warn('⚠️ Firebase no configurado correctamente.');
+        console.warn('📖 Lee GUIA_FIREBASE.md para instrucciones completas');
+        console.warn('💾 Usando modo local (localStorage)');
         updateConnectionStatus('disconnected');
+        showFirebaseWarning();
     }
 } catch (error) {
     console.error('❌ Error al inicializar Firebase:', error);
+    console.error('💡 Verifica que:');
+    console.error('   1. Todas las credenciales estén correctamente copiadas');
+    console.error('   2. Las comillas " estén alrededor de cada valor');
+    console.error('   3. La Realtime Database esté creada en Firebase');
     updateConnectionStatus('disconnected');
+    showFirebaseWarning();
 }
 
 let teamCount = 0;
@@ -587,6 +644,31 @@ function updateConnectionStatus(status) {
             statusText.textContent = '🟡 Sincronizando...';
             break;
     }
+}
+
+// Función para mostrar advertencia de Firebase no configurado
+function showFirebaseWarning() {
+    // Verificar si ya existe el mensaje
+    if (document.getElementById('firebaseWarning')) return;
+    
+    const warning = document.createElement('div');
+    warning.id = 'firebaseWarning';
+    warning.className = 'firebase-warning';
+    warning.innerHTML = `
+        <strong>⚠️ Firebase no configurado</strong>
+        Estás en modo local. Para habilitar sincronización en tiempo real:
+        <br><br>
+        📖 Lee <strong>GUIA_FIREBASE.md</strong> para instrucciones paso a paso
+        <br><br>
+        <a href="https://console.firebase.google.com/" target="_blank">🔗 Ir a Firebase Console</a>
+    `;
+    document.body.appendChild(warning);
+    
+    // Cerrar al hacer clic
+    setTimeout(() => {
+        warning.style.cursor = 'pointer';
+        warning.onclick = () => warning.remove();
+    }, 2000);
 }
 
 // Función para mostrar notificación de cambio en tiempo real
