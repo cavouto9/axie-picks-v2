@@ -572,8 +572,8 @@ h1 {
 
 .axie-container:active .axie-image-wrapper img,
 .axie-container:focus .axie-image-wrapper img {
-    transform: scale(1.15) !important;
-    -webkit-transform: scale(1.15) !important;
+    transform: scale(1.1) !important;
+    -webkit-transform: scale(1.1) !important;
 }
 
 .axie-container .axie-image-wrapper img {
@@ -581,7 +581,7 @@ h1 {
     height: 100%;
     object-fit: cover;
     object-position: center center;
-    transform: scale(1.15);
+    transform: scale(1.1);
     transition: all 0.3s ease;
     background: transparent;
     -webkit-user-drag: none;
@@ -920,8 +920,10 @@ h1 {
     }
     
     .axie-container .axie-image-wrapper img {
-        object-fit: contain;
-        padding: 4px;
+        object-fit: cover;
+        object-position: center center;
+        transform: scale(1.4);
+        padding: 0;
     }
     
     .axie-container .axie-id-label {
@@ -1006,8 +1008,10 @@ h1 {
     
     .axie-container .axie-image-wrapper img {
         border-radius: 6px;
-        padding: 3px;
-        object-fit: contain;
+        padding: 0;
+        object-fit: cover;
+        object-position: center center;
+        transform: scale(1.4);
     }
     
     .axie-container .axie-id-label {
@@ -1140,8 +1144,8 @@ h1 {
     }
     
     .axie-container .axie-image-wrapper img {
-        transform: none !important;
-        -webkit-transform: none !important;
+        transform: scale(1.4) !important;
+        -webkit-transform: scale(1.4) !important;
         will-change: auto;
     }
 }
