@@ -1205,6 +1205,67 @@ h1 {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
+// Bloquear clic derecho y herramientas de desarrollador
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+document.addEventListener('keydown', function(e) {
+    // Bloquear F12
+    if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+Shift+I (Inspeccionar)
+    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+Shift+J (Consola)
+    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+Shift+C (Selector de elementos)
+    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+U (Ver código fuente)
+    if (e.ctrlKey && e.key === 'U') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+S (Guardar página)
+    if (e.ctrlKey && e.key === 'S') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+P (Imprimir)
+    if (e.ctrlKey && e.key === 'P') {
+        e.preventDefault();
+        return false;
+    }
+    // Bloquear Ctrl+Shift+K (Consola en Firefox)
+    if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Bloquear selección de texto (opcional, pero puede ayudar)
+document.addEventListener('selectstart', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+// Bloquear arrastrar y soltar
+document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+});
+
 function hashPassword(str) {
     let hash = 0;
     if (str.length === 0) return hash.toString();
