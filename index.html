@@ -234,9 +234,9 @@ body::before {
 }
 
 .theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
     background: var(--bg-button);
     color: #fff;
     font-weight: 700;
@@ -251,7 +251,7 @@ body::before {
     justify-content: center;
     width: 48px;
     height: 48px;
-    z-index: 1000;
+    z-index: 10000 !important;
 }
 
 .theme-toggle:hover {
@@ -985,8 +985,8 @@ h1 {
     }
     
     .theme-toggle {
-        top: 15px;
-        right: 15px;
+        top: 15px !important;
+        right: 15px !important;
         width: 40px;
         height: 40px;
         padding: 10px;
@@ -1127,8 +1127,8 @@ h1 {
     }
     
     .theme-toggle {
-        top: 12px;
-        right: 12px;
+        top: 12px !important;
+        right: 12px !important;
         width: 36px;
         height: 36px;
         padding: 8px;
@@ -1201,6 +1201,10 @@ h1 {
     </div>
 </div>
 
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+    <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+</button>
+
 <div class="main-content">
 <h1>⚔️ Axie Teams Manager</h1>
 
@@ -1208,10 +1212,6 @@ h1 {
     <span class="status-dot"></span>
     <span id="statusText">Desconectado</span>
 </div>
-
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
-    <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-</button>
 
 <div class="add-team">
     <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
