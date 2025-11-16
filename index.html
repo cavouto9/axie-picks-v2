@@ -27,6 +27,7 @@ body {
     --bg-card-hover: rgba(34, 34, 60, 1);
     --bg-input: rgba(255, 255, 255, 0.08);
     --bg-input-focus: rgba(255, 255, 255, 0.15);
+    --bg-axie-container: rgba(30, 30, 50, 0.6);
     --bg-button: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --bg-button-hover: linear-gradient(135deg, #7c8ef0 0%, #8a5fb8 100%);
     --text-primary: #ffffff;
@@ -50,6 +51,7 @@ body {
     --bg-card-hover: rgba(255, 255, 255, 1);
     --bg-input: rgba(0, 0, 0, 0.05);
     --bg-input-focus: rgba(0, 0, 0, 0.1);
+    --bg-axie-container: rgba(240, 240, 245, 0.4);
     --bg-button: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --bg-button-hover: linear-gradient(135deg, #7c8ef0 0%, #8a5fb8 100%);
     --text-primary: #1a1a2e;
@@ -500,11 +502,11 @@ h1 {
     border-radius: 16px;
     overflow: visible;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 3px solid transparent;
+    border: 2px solid var(--border-color);
     width: 100%;
-    background: var(--bg-input);
+    background: var(--bg-axie-container);
     backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     outline: none !important;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -541,9 +543,10 @@ h1 {
 
 .axie-container:hover {
     transform: scale(1.1) rotate(2deg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
     z-index: 10;
     border-color: var(--border-hover);
+    background: var(--bg-card);
 }
 
 .axie-container.banned:hover,
