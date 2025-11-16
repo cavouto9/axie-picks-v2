@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.3, user-scalable=yes">
 <title>Axie Teams Manager</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/LDM0FH3M/favicon.png">
+<link rel="icon" type="image/png" href="https://axiecdn.axieinfinity.com/axies/6516531/axie/axie-full-transparent.png">
 <style>
 * {
     box-sizing: border-box;
@@ -901,7 +901,7 @@ h1 {
     
     .axie-grid {
         grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
+        gap: 8px;
     }
     
     .axie-container {
@@ -910,11 +910,28 @@ h1 {
     
     .axie-container .axie-image-wrapper {
         padding: 2px;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .axie-container .axie-image-wrapper img {
+        object-fit: contain;
+        padding: 4px;
     }
     
     .axie-container .axie-id-label {
         font-size: 10px;
-        padding: 2px 4px;
+        padding: 3px 4px;
+        min-height: 18px;
+    }
+    
+    .axie-container.picked::after {
+        top: 4px;
+        left: 4px;
+        right: auto;
+        width: 18px;
+        height: 18px;
+        font-size: 12px;
+        box-shadow: 0 1px 5px rgba(46, 213, 115, 0.5);
     }
     
     .axie-delete {
@@ -950,20 +967,37 @@ h1 {
 @media (max-width: 500px) {
     .axie-grid {
         grid-template-columns: repeat(4, 1fr);
-        gap: 5px;
+        gap: 6px;
     }
     
     .axie-container {
         padding: 3px;
     }
     
+    .axie-container .axie-image-wrapper {
+        border-radius: 8px 8px 0 0;
+    }
+    
     .axie-container .axie-image-wrapper img {
         border-radius: 6px;
+        padding: 3px;
+        object-fit: contain;
     }
     
     .axie-container .axie-id-label {
         font-size: 9px;
-        padding: 1px 3px;
+        padding: 2px 3px;
+        min-height: 16px;
+    }
+    
+    .axie-container.picked::after {
+        top: 3px;
+        left: 3px;
+        right: auto;
+        width: 16px;
+        height: 16px;
+        font-size: 11px;
+        box-shadow: 0 1px 4px rgba(46, 213, 115, 0.5);
     }
     
     .axie-delete {
