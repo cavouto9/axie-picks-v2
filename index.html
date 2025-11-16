@@ -234,39 +234,31 @@ body::before {
 }
 
 .theme-toggle {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    left: auto !important;
-    bottom: auto !important;
     background: var(--bg-button);
     color: #fff;
     font-weight: 700;
     border: none;
-    padding: 12px;
-    border-radius: 50%;
+    padding: 14px 28px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
-    display: flex !important;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    z-index: 10000 !important;
-    margin: 0 !important;
+    gap: 8px;
 }
 
 .theme-toggle:hover {
-    transform: translateY(-2px) scale(1.1);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
     background: var(--bg-button-hover);
 }
 
 .theme-toggle-icon {
-    font-size: 24px;
+    font-size: 20px;
     transition: transform 0.3s ease;
-    line-height: 1;
 }
 
 .theme-toggle:hover .theme-toggle-icon {
@@ -988,15 +980,7 @@ h1 {
     }
     
     .theme-toggle {
-        top: 15px !important;
-        right: 15px !important;
-        width: 40px;
-        height: 40px;
-        padding: 10px;
-    }
-    
-    .theme-toggle-icon {
-        font-size: 20px;
+        display: none !important;
     }
 }
 
@@ -1130,15 +1114,7 @@ h1 {
     }
     
     .theme-toggle {
-        top: 12px !important;
-        right: 12px !important;
-        width: 36px;
-        height: 36px;
-        padding: 8px;
-    }
-    
-    .theme-toggle-icon {
-        font-size: 18px;
+        display: none !important;
     }
     
     .axie-container {
@@ -1204,10 +1180,6 @@ h1 {
     </div>
 </div>
 
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
-    <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-</button>
-
 <div class="main-content">
 <h1>⚔️ Axie Teams Manager</h1>
 
@@ -1220,6 +1192,10 @@ h1 {
     <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
     <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
     <button onclick="addTeam()">➕ Agregar equipo</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+        <span id="themeText">Modo Oscuro</span>
+    </button>
 </div>
 
 <div id="teamsContainer"></div>
@@ -1390,12 +1366,15 @@ function toggleTheme() {
 
 function updateThemeUI(theme) {
     const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
     
-    if (themeIcon) {
+    if (themeIcon && themeText) {
         if (theme === 'light') {
             themeIcon.textContent = '☀️';
+            themeText.textContent = 'Modo Claro';
         } else {
             themeIcon.textContent = '🌙';
+            themeText.textContent = 'Modo Oscuro';
         }
     }
 }
