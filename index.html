@@ -376,15 +376,10 @@ h1 {
     box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05);
     transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
     border: 2px solid var(--border-color);
-    cursor: grab;
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-.team-card:active {
-    cursor: grabbing;
 }
 
 .team-card:hover {
@@ -393,15 +388,6 @@ h1 {
     border-color: var(--border-hover);
 }
 
-.team-card.dragging {
-    opacity: 0.6;
-    z-index: 1000;
-}
-
-.team-card.drag-over {
-    border: 2px solid rgba(46, 213, 115, 0.8);
-    background: rgba(46, 213, 115, 0.1);
-}
 
 .team-header {
     display: flex;
@@ -483,6 +469,27 @@ h1 {
     background: rgba(255, 193, 7, 0.3);
     border-color: rgba(255, 193, 7, 0.7);
     color: #ffc107;
+}
+
+.team-header button.move-btn {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.5);
+    color: #667eea;
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+.team-header button.move-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.7);
+    color: #667eea;
+    transform: scale(1.1);
+}
+
+.team-header button.move-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .axie-grid {
@@ -1370,10 +1377,6 @@ function showMainContent() {
             setTimeout(initializeContent, 100);
             return;
         }
-        
-        if (typeof setupContainerDragAndDrop === 'function') {
-            setupContainerDragAndDrop();
-        }
     }
     
     setTimeout(initializeContent, 150);
@@ -1792,6 +1795,42 @@ function createTeamElement(team, teamId) {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const moveUpBtn = document.createElement('button');
+    moveUpBtn.className = 'move-btn';
+    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.title = 'Mover arriba';
+    moveUpBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaArriba(teamId);
+    };
+    
+    const moveDownBtn = document.createElement('button');
+    moveDownBtn.className = 'move-btn';
+    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.title = 'Mover abajo';
+    moveDownBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaAbajo(teamId);
+    };
+    
+    const moveLeftBtn = document.createElement('button');
+    moveLeftBtn.className = 'move-btn';
+    moveLeftBtn.innerHTML = '⬅';
+    moveLeftBtn.title = 'Mover izquierda';
+    moveLeftBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaIzquierda(teamId);
+    };
+    
+    const moveRightBtn = document.createElement('button');
+    moveRightBtn.className = 'move-btn';
+    moveRightBtn.innerHTML = '➡';
+    moveRightBtn.title = 'Mover derecha';
+    moveRightBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaDerecha(teamId);
+    };
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -1801,6 +1840,10 @@ function createTeamElement(team, teamId) {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamId);
     
+    buttonsContainer.appendChild(moveUpBtn);
+    buttonsContainer.appendChild(moveDownBtn);
+    buttonsContainer.appendChild(moveLeftBtn);
+    buttonsContainer.appendChild(moveRightBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
@@ -1829,13 +1872,14 @@ function createTeamElement(team, teamId) {
     `;
     teamDiv.appendChild(addAxieDiv);
     
-    setupDragAndDrop(teamDiv);
-    
     return teamDiv;
 }
 
+// Función de drag & drop deshabilitada - ahora se usan botones de flecha
 function setupDragAndDrop(teamCard) {
-    teamCard.draggable = true;
+    // Drag & drop deshabilitado - usar botones de flecha en su lugar
+    return;
+    teamCard.draggable = false;
     
     const header = teamCard.querySelector('.team-header');
     const buttons = teamCard.querySelectorAll('button');
@@ -2083,60 +2127,10 @@ function setupDragAndDrop(teamCard) {
     });
 }
 
+// Función de drag & drop del contenedor deshabilitada
 function setupContainerDragAndDrop() {
-    const container = document.getElementById('teamsContainer');
-    if (!container) return;
-    
-    const handleContainerDragOver = (clientY) => {
-        const dragging = document.querySelector('.dragging');
-        if (!dragging) return;
-        
-        const cards = Array.from(container.querySelectorAll('.team-card:not(.dragging)'));
-        let afterElement = null;
-        
-        for (const card of cards) {
-            const box = card.getBoundingClientRect();
-            const centerY = box.top + box.height / 2;
-            
-            if (clientY < centerY) {
-                afterElement = card;
-                break;
-            }
-        }
-        
-        if (afterElement) {
-            container.insertBefore(dragging, afterElement);
-        } else if (cards.length > 0) {
-            container.insertBefore(dragging, cards[cards.length - 1].nextSibling);
-        } else {
-            container.appendChild(dragging);
-        }
-    };
-    
-    container.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'move';
-        }
-        handleContainerDragOver(e.clientY);
-    });
-    
-    container.addEventListener('drop', (e) => {
-        e.preventDefault();
-        
-        setTimeout(() => {
-            saveTeams();
-        }, 50);
-    });
-    
-    container.addEventListener('touchmove', (e) => {
-        const dragging = document.querySelector('.dragging');
-        if (dragging) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleContainerDragOver(touch.clientY);
-        }
-    }, { passive: false });
+    // Drag & drop deshabilitado - usar botones de flecha en su lugar
+    return;
 }
 
 function renderTeams(teams, isRealtimeUpdate = false) {
@@ -2316,6 +2310,42 @@ function addTeam() {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const moveUpBtn = document.createElement('button');
+    moveUpBtn.className = 'move-btn';
+    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.title = 'Mover arriba';
+    moveUpBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaArriba(teamCount);
+    };
+    
+    const moveDownBtn = document.createElement('button');
+    moveDownBtn.className = 'move-btn';
+    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.title = 'Mover abajo';
+    moveDownBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaAbajo(teamCount);
+    };
+    
+    const moveLeftBtn = document.createElement('button');
+    moveLeftBtn.className = 'move-btn';
+    moveLeftBtn.innerHTML = '⬅';
+    moveLeftBtn.title = 'Mover izquierda';
+    moveLeftBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaIzquierda(teamCount);
+    };
+    
+    const moveRightBtn = document.createElement('button');
+    moveRightBtn.className = 'move-btn';
+    moveRightBtn.innerHTML = '➡';
+    moveRightBtn.title = 'Mover derecha';
+    moveRightBtn.onclick = (e) => {
+        e.stopPropagation();
+        moverParaDerecha(teamCount);
+    };
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -2325,6 +2355,10 @@ function addTeam() {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamCount);
     
+    buttonsContainer.appendChild(moveUpBtn);
+    buttonsContainer.appendChild(moveDownBtn);
+    buttonsContainer.appendChild(moveLeftBtn);
+    buttonsContainer.appendChild(moveRightBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
@@ -2531,6 +2565,7 @@ function addAxie(teamId) {
             if(addedCount === validIds.length) {
                 setTimeout(() => {
                     if(validCount > 0) {
+                        updateAxiesCount();
                         saveTeams();
                     }
                 }, 300);
@@ -2636,6 +2671,112 @@ function editTeamName(teamId) {
             nameSpan.style.display = '';
         }
     });
+}
+
+function moverParaArriba(teamId) {
+    const container = document.getElementById('teamsContainer');
+    const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamDiv) return;
+    
+    const prevTeam = teamDiv.previousElementSibling;
+    if (!prevTeam || !prevTeam.classList.contains('team-card')) return;
+    
+    container.insertBefore(teamDiv, prevTeam);
+    saveTeams();
+}
+
+function moverParaAbajo(teamId) {
+    const container = document.getElementById('teamsContainer');
+    const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamDiv) return;
+    
+    const nextTeam = teamDiv.nextElementSibling;
+    if (!nextTeam || !nextTeam.classList.contains('team-card')) return;
+    
+    const afterNext = nextTeam.nextElementSibling;
+    if (afterNext) {
+        container.insertBefore(teamDiv, afterNext);
+    } else {
+        container.appendChild(teamDiv);
+    }
+    saveTeams();
+}
+
+function moverParaIzquierda(teamId) {
+    const container = document.getElementById('teamsContainer');
+    const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamDiv) return;
+    
+    const allTeams = Array.from(container.querySelectorAll('.team-card'));
+    const currentIndex = allTeams.indexOf(teamDiv);
+    
+    if (currentIndex === -1) return;
+    
+    // En un grid de 2 columnas, calcular la posición
+    const column = currentIndex % 2;
+    
+    if (column === 0) {
+        // Ya está en la columna izquierda, no se puede mover más a la izquierda
+        return;
+    }
+    
+    // Está en la columna derecha (1), mover a la izquierda
+    // Intercambiar con el equipo de la misma fila en la columna izquierda
+    const row = Math.floor(currentIndex / 2);
+    const leftIndex = row * 2;
+    
+    if (leftIndex < allTeams.length) {
+        const leftTeam = allTeams[leftIndex];
+        container.insertBefore(teamDiv, leftTeam);
+        saveTeams();
+    }
+}
+
+function moverParaDerecha(teamId) {
+    const container = document.getElementById('teamsContainer');
+    const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamDiv) return;
+    
+    const allTeams = Array.from(container.querySelectorAll('.team-card'));
+    const currentIndex = allTeams.indexOf(teamDiv);
+    
+    if (currentIndex === -1) return;
+    
+    // En un grid de 2 columnas, calcular la posición
+    const column = currentIndex % 2;
+    
+    if (column === 1) {
+        // Ya está en la columna derecha, no se puede mover más a la derecha
+        return;
+    }
+    
+    // Está en la columna izquierda (0), mover a la derecha
+    // Intercambiar con el equipo de la misma fila en la columna derecha
+    const row = Math.floor(currentIndex / 2);
+    const rightIndex = row * 2 + 1;
+    
+    if (rightIndex < allTeams.length) {
+        const rightTeam = allTeams[rightIndex];
+        const afterRight = rightTeam.nextElementSibling;
+        if (afterRight) {
+            container.insertBefore(teamDiv, afterRight);
+        } else {
+            container.appendChild(teamDiv);
+        }
+        saveTeams();
+    } else {
+        // No hay equipo en la columna derecha, simplemente mover después del siguiente
+        const nextTeam = teamDiv.nextElementSibling;
+        if (nextTeam && nextTeam.classList.contains('team-card')) {
+            const afterNext = nextTeam.nextElementSibling;
+            if (afterNext) {
+                container.insertBefore(teamDiv, afterNext);
+            } else {
+                container.appendChild(teamDiv);
+            }
+            saveTeams();
+        }
+    }
 }
 
 function clearAllAxies(teamId) {
