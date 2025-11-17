@@ -472,24 +472,69 @@ h1 {
 }
 
 .team-header button.move-btn {
-    background: rgba(102, 126, 234, 0.2);
-    border-color: rgba(102, 126, 234, 0.5);
-    color: #667eea;
-    padding: 4px 8px;
-    font-size: 14px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(138, 43, 226, 0.25));
+    border: 2px solid rgba(102, 126, 234, 0.6);
+    color: #8a63e8;
+    padding: 6px 10px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.team-header button.move-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.team-header button.move-btn:hover::before {
+    left: 100%;
 }
 
 .team-header button.move-btn:hover {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: rgba(102, 126, 234, 0.7);
-    color: #667eea;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(138, 43, 226, 0.4));
+    border-color: rgba(138, 43, 226, 0.9);
+    color: #a78bfa;
+    transform: scale(1.15) translateY(-2px);
+    box-shadow: 0 4px 16px rgba(138, 43, 226, 0.4), 
+                0 0 20px rgba(138, 43, 226, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.team-header button.move-btn:active {
+    transform: scale(1.05) translateY(0);
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.3), 
+                inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .team-header button.move-btn:disabled {
-    opacity: 0.3;
+    opacity: 0.4;
     cursor: not-allowed;
     transform: none;
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: none;
+}
+
+.team-header button.move-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .axie-grid {
@@ -1797,7 +1842,7 @@ function createTeamElement(team, teamId) {
     
     const moveUpBtn = document.createElement('button');
     moveUpBtn.className = 'move-btn';
-    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.innerHTML = '▲';
     moveUpBtn.title = 'Mover arriba';
     moveUpBtn.onclick = (e) => {
         e.stopPropagation();
@@ -1806,7 +1851,7 @@ function createTeamElement(team, teamId) {
     
     const moveDownBtn = document.createElement('button');
     moveDownBtn.className = 'move-btn';
-    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.innerHTML = '▼';
     moveDownBtn.title = 'Mover abajo';
     moveDownBtn.onclick = (e) => {
         e.stopPropagation();
@@ -1815,7 +1860,7 @@ function createTeamElement(team, teamId) {
     
     const moveLeftBtn = document.createElement('button');
     moveLeftBtn.className = 'move-btn';
-    moveLeftBtn.innerHTML = '⬅';
+    moveLeftBtn.innerHTML = '◄';
     moveLeftBtn.title = 'Mover izquierda';
     moveLeftBtn.onclick = (e) => {
         e.stopPropagation();
@@ -1824,7 +1869,7 @@ function createTeamElement(team, teamId) {
     
     const moveRightBtn = document.createElement('button');
     moveRightBtn.className = 'move-btn';
-    moveRightBtn.innerHTML = '➡';
+    moveRightBtn.innerHTML = '►';
     moveRightBtn.title = 'Mover derecha';
     moveRightBtn.onclick = (e) => {
         e.stopPropagation();
@@ -2312,7 +2357,7 @@ function addTeam() {
     
     const moveUpBtn = document.createElement('button');
     moveUpBtn.className = 'move-btn';
-    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.innerHTML = '▲';
     moveUpBtn.title = 'Mover arriba';
     moveUpBtn.onclick = (e) => {
         e.stopPropagation();
@@ -2321,7 +2366,7 @@ function addTeam() {
     
     const moveDownBtn = document.createElement('button');
     moveDownBtn.className = 'move-btn';
-    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.innerHTML = '▼';
     moveDownBtn.title = 'Mover abajo';
     moveDownBtn.onclick = (e) => {
         e.stopPropagation();
@@ -2330,7 +2375,7 @@ function addTeam() {
     
     const moveLeftBtn = document.createElement('button');
     moveLeftBtn.className = 'move-btn';
-    moveLeftBtn.innerHTML = '⬅';
+    moveLeftBtn.innerHTML = '◄';
     moveLeftBtn.title = 'Mover izquierda';
     moveLeftBtn.onclick = (e) => {
         e.stopPropagation();
@@ -2339,7 +2384,7 @@ function addTeam() {
     
     const moveRightBtn = document.createElement('button');
     moveRightBtn.className = 'move-btn';
-    moveRightBtn.innerHTML = '➡';
+    moveRightBtn.innerHTML = '►';
     moveRightBtn.title = 'Mover derecha';
     moveRightBtn.onclick = (e) => {
         e.stopPropagation();
