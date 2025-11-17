@@ -281,6 +281,43 @@ h1 {
     transition: color 0.3s ease;
 }
 
+.stats-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.axie-counter {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    padding: 12px 24px;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.counter-icon {
+    font-size: 20px;
+}
+
+.counter-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.counter-value {
+    color: var(--accent-primary);
+    font-size: 18px;
+    font-weight: 700;
+}
+
 .add-team {
     display: flex;
     justify-content: center;
@@ -422,6 +459,42 @@ h1 {
     align-items: center;
 }
 
+.favorite-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.3s ease;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2);
+}
+
+.favorite-btn.active {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+    animation: starPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.team-card.favorite {
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 215, 0, 0.1);
+}
+
 .team-name {
     font-size: 18px;
     font-weight: 700;
@@ -516,6 +589,46 @@ h1 {
     touch-action: manipulation;
     display: flex;
     flex-direction: column;
+}
+
+.axie-container:not(.loaded) {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+    animation: axieAddIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.axie-container.loaded {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+@keyframes axieAddIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(10px);
+    }
+    50% {
+        transform: scale(1.05) translateY(-2px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.axie-container.removing {
+    animation: axieRemoveOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes axieRemoveOut {
+    0% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0) rotate(180deg);
+    }
 }
 
 .axie-container .axie-image-wrapper {
@@ -1192,6 +1305,14 @@ h1 {
     <span id="statusText">Desconectado</span>
 </div>
 
+<div class="stats-bar">
+    <div class="axie-counter">
+        <span class="counter-icon">🦄</span>
+        <span class="counter-label">Total de Axies:</span>
+        <span class="counter-value" id="totalAxiesCount">0</span>
+    </div>
+</div>
+
 <div class="add-team">
     <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
     <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
@@ -1598,7 +1719,8 @@ function getTeamsData() {
             else if(axieDiv.classList.contains('picked')) status = 'picked';
             axies.push({id: String(id), status: status});
         });
-        teams.push({id: String(teamId), name: name, axies: axies});
+        const isFavorite = teamDiv.classList.contains('favorite');
+        teams.push({id: String(teamId), name: name, axies: axies, favorite: isFavorite});
     });
     return teams;
 }
@@ -1706,6 +1828,23 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
             }
         }
         
+        const favoriteBtn = existingTeamDiv.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            const isFavorite = newTeam.favorite === true;
+            const currentlyFavorite = existingTeamDiv.classList.contains('favorite');
+            if (isFavorite !== currentlyFavorite) {
+                if (isFavorite) {
+                    existingTeamDiv.classList.add('favorite');
+                    favoriteBtn.classList.add('active');
+                    favoriteBtn.innerHTML = '⭐';
+                } else {
+                    existingTeamDiv.classList.remove('favorite');
+                    favoriteBtn.classList.remove('active');
+                    favoriteBtn.innerHTML = '☆';
+                }
+            }
+        }
+        
         const grid = existingTeamDiv.querySelector('.axie-grid');
         if (grid) {
             const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
@@ -1762,6 +1901,8 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
     if (container.children.length === 0) {
         container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
     }
+    
+    updateAxiesCount();
 }
 
 function createTeamElement(team, teamId) {
@@ -1792,6 +1933,18 @@ function createTeamElement(team, teamId) {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const favoriteBtn = document.createElement('button');
+    favoriteBtn.className = 'favorite-btn';
+    favoriteBtn.innerHTML = team.favorite ? '⭐' : '☆';
+    if (team.favorite) {
+        favoriteBtn.classList.add('active');
+        teamDiv.classList.add('favorite');
+    }
+    favoriteBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleFavorite(teamId);
+    };
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -1801,6 +1954,7 @@ function createTeamElement(team, teamId) {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamId);
     
+    buttonsContainer.appendChild(favoriteBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
@@ -1814,7 +1968,13 @@ function createTeamElement(team, teamId) {
 
     team.axies.forEach(axie => {
         if (axie.id) {
-            addAxieToGrid(axie.id, grid, axie.status || '', false);
+            const added = addAxieToGrid(axie.id, grid, axie.status || '', false);
+            if (added) {
+                const axieElement = grid.querySelector(`.axie-container[data-axie-id="${axie.id}"]`);
+                if (axieElement) {
+                    axieElement.classList.add('loaded');
+                }
+            }
         }
     });
 
@@ -2156,6 +2316,8 @@ function renderTeams(teams, isRealtimeUpdate = false) {
         container.appendChild(teamDiv);
         teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
     });
+    
+    updateAxiesCount();
 }
 
 function loadTeams() {
@@ -2316,6 +2478,14 @@ function addTeam() {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const favoriteBtn = document.createElement('button');
+    favoriteBtn.className = 'favorite-btn';
+    favoriteBtn.innerHTML = '☆';
+    favoriteBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleFavorite(teamCount);
+    };
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -2325,6 +2495,7 @@ function addTeam() {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamCount);
     
+    buttonsContainer.appendChild(favoriteBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
@@ -2359,6 +2530,7 @@ function addTeam() {
     document.getElementById('teamNameInput').value = '';
     document.getElementById('axieIdsInput').value = '';
 
+    updateAxiesCount();
     saveTeams();
 }
 
@@ -2484,11 +2656,10 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     deleteBtn.innerText = '×';
     deleteBtn.onclick = (e) => {
         e.stopPropagation();
-        axieDiv.style.transition = 'all 0.3s ease';
-        axieDiv.style.transform = 'scale(0) rotate(180deg)';
-        axieDiv.style.opacity = '0';
+        axieDiv.classList.add('removing');
         setTimeout(() => {
             axieDiv.remove();
+            updateAxiesCount();
             setTimeout(() => {
                 saveTeams();
             }, 100);
@@ -2500,6 +2671,10 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     axieDiv.appendChild(idLabel);
     axieDiv.appendChild(deleteBtn);
     grid.appendChild(axieDiv);
+    
+    if (shouldSave) {
+        updateAxiesCount();
+    }
     
     return true;
 }
@@ -2531,6 +2706,7 @@ function addAxie(teamId) {
             if(addedCount === validIds.length) {
                 setTimeout(() => {
                     if(validCount > 0) {
+                        updateAxiesCount();
                         saveTeams();
                     }
                 }, 300);
@@ -2656,17 +2832,51 @@ function clearAllAxies(teamId) {
     }
     
     axies.forEach(axie => {
-        axie.style.transition = 'all 0.3s ease';
-        axie.style.transform = 'scale(0) rotate(180deg)';
-        axie.style.opacity = '0';
+        axie.classList.add('removing');
     });
     
     setTimeout(() => {
         axies.forEach(axie => axie.remove());
+        updateAxiesCount();
         setTimeout(() => {
             saveTeams();
         }, 100);
     }, 300);
+}
+
+function toggleFavorite(teamId) {
+    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamDiv) return;
+    
+    const favoriteBtn = teamDiv.querySelector('.favorite-btn');
+    if (!favoriteBtn) return;
+    
+    const isFavorite = teamDiv.classList.contains('favorite');
+    
+    if (isFavorite) {
+        teamDiv.classList.remove('favorite');
+        favoriteBtn.classList.remove('active');
+        favoriteBtn.innerHTML = '☆';
+    } else {
+        teamDiv.classList.add('favorite');
+        favoriteBtn.classList.add('active');
+        favoriteBtn.innerHTML = '⭐';
+    }
+    
+    saveTeams();
+}
+
+function updateAxiesCount() {
+    const container = document.getElementById('teamsContainer');
+    if (!container) return;
+    
+    const allAxies = container.querySelectorAll('.axie-container');
+    const totalCount = allAxies.length;
+    
+    const counterElement = document.getElementById('totalAxiesCount');
+    if (counterElement) {
+        counterElement.textContent = totalCount;
+    }
 }
 
 function deleteTeam(teamId) {
@@ -2679,15 +2889,16 @@ function deleteTeam(teamId) {
         teamDiv.style.transition = 'all 0.4s ease';
         teamDiv.style.transform = 'translateX(-100%)';
         teamDiv.style.opacity = '0';
-        setTimeout(() => {
-            teamDiv.remove();
             setTimeout(() => {
-                saveTeams();
-            }, 100);
-            if (container.children.length === 0) {
-                container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
-            }
-        }, 400);
+                teamDiv.remove();
+                updateAxiesCount();
+                setTimeout(() => {
+                    saveTeams();
+                }, 100);
+                if (container.children.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+                }
+            }, 400);
     }
 }
 
