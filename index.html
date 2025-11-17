@@ -1688,7 +1688,7 @@ function saveTeams(immediate = false) {
         if (immediate) {
             saveToFirebase();
         } else {
-            window.saveTimeout = setTimeout(saveToFirebase, 300);
+            window.saveTimeout = setTimeout(saveToFirebase, 200);
         }
     }
 }
@@ -2258,13 +2258,13 @@ function setupRealtimeListener() {
         const teams = snapshot.val();
         const now = Date.now();
         
-        if (now - lastUpdateTime < 300) {
+        if (now - lastUpdateTime < 100) {
             return;
         }
         
         const timeSinceLastSave = now - lastSaveTime;
         
-        if (timeSinceLastSave < 1000 && isSyncing) {
+        if (timeSinceLastSave < 500 && isSyncing) {
             return;
         }
         
@@ -2284,7 +2284,7 @@ function setupRealtimeListener() {
         
         clearTimeout(updateTimeout);
         updateTimeout = setTimeout(() => {
-            if (timeSinceLastSave < 800 && isSyncing) {
+            if (timeSinceLastSave < 400 && isSyncing) {
                 return;
             }
             
@@ -2304,7 +2304,7 @@ function setupRealtimeListener() {
                     isSyncing = false;
                 }, 400);
             }
-        }, 200);
+        }, 100);
     }, (error) => {
         console.error('❌ Error en el listener de Firebase:', error);
         updateConnectionStatus('disconnected');
@@ -2438,7 +2438,9 @@ function addTeam() {
     document.getElementById('teamNameInput').value = '';
     document.getElementById('axieIdsInput').value = '';
 
-    saveTeams();
+    setTimeout(() => {
+        saveTeams(true);
+    }, 100);
 }
 
 function addAxieToGrid(id, grid, status='', shouldSave = true) {
@@ -2552,10 +2554,8 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         
         axieDiv.dataset.lastStatusChange = Date.now().toString();
         
-        setTimeout(() => {
-            lastSaveTime = Date.now();
-            saveTeams(true);
-        }, 100);
+        lastSaveTime = Date.now();
+        saveTeams(true);
     });
 
     const deleteBtn = document.createElement('button');
@@ -2568,9 +2568,7 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         axieDiv.style.opacity = '0';
         setTimeout(() => {
             axieDiv.remove();
-            setTimeout(() => {
-                saveTeams();
-            }, 100);
+            saveTeams(true);
         }, 300);
     };
 
@@ -2610,10 +2608,9 @@ function addAxie(teamId) {
             if(addedCount === validIds.length) {
                 setTimeout(() => {
                     if(validCount > 0) {
-                        updateAxiesCount();
-                        saveTeams();
+                        saveTeams(true);
                     }
-                }, 300);
+                }, 100);
             }
         }, index * 30);
     });
@@ -2700,7 +2697,7 @@ function editTeamName(teamId) {
         const newName = input.value.trim();
         if(newName && newName !== currentName) {
             nameSpan.textContent = newName;
-            saveTeams();
+            saveTeams(true);
         }
         input.remove();
         nameSpan.style.display = '';
@@ -2727,7 +2724,7 @@ function moverParaArriba(teamId) {
     if (!prevTeam || !prevTeam.classList.contains('team-card')) return;
     
     container.insertBefore(teamDiv, prevTeam);
-    saveTeams();
+    saveTeams(true);
 }
 
 function moverParaAbajo(teamId) {
@@ -2744,7 +2741,7 @@ function moverParaAbajo(teamId) {
     } else {
         container.appendChild(teamDiv);
     }
-    saveTeams();
+    saveTeams(true);
 }
 
 function moverParaIzquierda(teamId) {
@@ -2773,7 +2770,7 @@ function moverParaIzquierda(teamId) {
     if (leftIndex < allTeams.length) {
         const leftTeam = allTeams[leftIndex];
         container.insertBefore(teamDiv, leftTeam);
-        saveTeams();
+        saveTeams(true);
     }
 }
 
@@ -2808,7 +2805,7 @@ function moverParaDerecha(teamId) {
         } else {
             container.appendChild(teamDiv);
         }
-        saveTeams();
+        saveTeams(true);
     } else {
         // No hay equipo en la columna derecha, simplemente mover después del siguiente
         const nextTeam = teamDiv.nextElementSibling;
@@ -2819,7 +2816,7 @@ function moverParaDerecha(teamId) {
             } else {
                 container.appendChild(teamDiv);
             }
-            saveTeams();
+            saveTeams(true);
         }
     }
 }
@@ -2849,9 +2846,7 @@ function clearAllAxies(teamId) {
     
     setTimeout(() => {
         axies.forEach(axie => axie.remove());
-        setTimeout(() => {
-            saveTeams();
-        }, 100);
+        saveTeams(true);
     }, 300);
 }
 
@@ -2867,9 +2862,7 @@ function deleteTeam(teamId) {
         teamDiv.style.opacity = '0';
         setTimeout(() => {
             teamDiv.remove();
-            setTimeout(() => {
-                saveTeams();
-            }, 100);
+            saveTeams(true);
             if (container.children.length === 0) {
                 container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
             }
