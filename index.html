@@ -1651,10 +1651,15 @@ function saveTeams(immediate = false) {
         };
         
         if (immediate) {
-            saveToFirebase();
+            // Para guardados inmediatos, agregar un pequeño delay para asegurar que el DOM esté actualizado
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    saveToFirebase();
+                }, 100);
+            });
         } else {
-            // Reducir el debounce para guardar más rápido y permitir actualizaciones más rápidas
-            window.saveTimeout = setTimeout(saveToFirebase, 150);
+            // Para guardados no inmediatos, usar un delay más largo
+            window.saveTimeout = setTimeout(saveToFirebase, 300);
         }
     } else {
         isSaving = false;
@@ -1669,12 +1674,12 @@ function processSaveQueue() {
     // Procesar el siguiente elemento de la cola
     const nextSave = saveQueue.shift();
     if (nextSave) {
-        // Pequeño delay para asegurar que el DOM se actualice completamente
-        // y que cualquier cambio pendiente se refleje
+        // Delay más largo para asegurar que el DOM se actualice completamente
+        // y que cualquier cambio pendiente se refleje antes de guardar
         requestAnimationFrame(() => {
             setTimeout(() => {
                 saveTeams(nextSave.immediate);
-            }, 30);
+            }, 200);
         });
     }
 }
@@ -2372,26 +2377,30 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         const changeTime = Date.now();
         axieDiv.dataset.lastStatusChange = changeTime.toString();
         
-        // Usar requestAnimationFrame para asegurar que el DOM se actualice completamente
-        // y luego usar un pequeño delay para asegurar que el estado se refleje correctamente
-        requestAnimationFrame(() => {
+        // Agregar un delay más largo para asegurar que el DOM se actualice completamente
+        // y que el estado se refleje correctamente antes de guardar
+        // Esto es especialmente importante para clics rápidos
+        setTimeout(() => {
             // Doble verificación: leer el estado actual del DOM para asegurar que es correcto
             const currentBanned = axieDiv.classList.contains('banned');
             const currentPicked = axieDiv.classList.contains('picked');
             const actualStatus = currentBanned ? 'banned' : (currentPicked ? 'picked' : '');
             
-            // Solo guardar si el estado coincide con lo que esperamos
+            // Verificar que el estado actual coincide con el esperado
             if (actualStatus === newStatus || (newStatus === '' && actualStatus === '')) {
-                lastSaveTime = changeTime;
-                saveTeams(true);
+                lastSaveTime = Date.now();
+                // Usar requestAnimationFrame para asegurar que el DOM esté completamente actualizado
+                requestAnimationFrame(() => {
+                    saveTeams(true);
+                });
             } else {
                 // Si hay discrepancia, esperar un poco más y reintentar
                 setTimeout(() => {
                     lastSaveTime = Date.now();
                     saveTeams(true);
-                }, 50);
+                }, 100);
             }
-        });
+        }, 400); // Delay de 400ms para asegurar que el DOM se actualice completamente
         
         setTimeout(() => {
             axieDiv.blur();
