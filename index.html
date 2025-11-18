@@ -1613,10 +1613,11 @@ function saveTeams(immediate = false) {
             
             db.ref(DB_PATH).set(teams)
                 .then(() => {
+                    // Reducir el tiempo de espera para permitir actualizaciones más rápidas
                     setTimeout(() => {
                         isSyncing = false;
                         updateConnectionStatus('connected');
-                    }, 300);
+                    }, 200);
                 })
                 .catch((error) => {
                     console.error('❌ Error al guardar en Firebase:', error);
@@ -1628,7 +1629,8 @@ function saveTeams(immediate = false) {
         if (immediate) {
             saveToFirebase();
         } else {
-            window.saveTimeout = setTimeout(saveToFirebase, 300);
+            // Reducir el debounce para guardar más rápido y permitir actualizaciones más rápidas
+            window.saveTimeout = setTimeout(saveToFirebase, 200);
         }
     }
 }
@@ -1725,14 +1727,31 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
                         const timeSinceLastChange = Date.now() - lastStatusChange;
                         const timeSinceLastSave = Date.now() - lastSaveTime;
                         
-                        // Solo actualizar si ha pasado suficiente tiempo desde el último cambio local
-                        // o si no estamos sincronizando y ha pasado tiempo desde el último guardado
-                        if (timeSinceLastChange > 1500 || (timeSinceLastSave > 1000 && !isSyncing)) {
+                        // Lógica mejorada para múltiples usuarios:
+                        // 1. Si el cambio local es muy reciente (< 500ms), protegerlo (evitar sobrescritura inmediata)
+                        // 2. Si el cambio local es reciente pero no muy reciente (500ms - 1.5s), 
+                        //    solo actualizar si no estamos sincronizando (evitar conflictos durante guardado)
+                        // 3. Si el cambio local es antiguo (> 1.5s), siempre actualizar (permitir cambios de otros usuarios)
+                        const isVeryRecentChange = timeSinceLastChange < 500;
+                        const isRecentChange = timeSinceLastChange < 1500;
+                        const shouldProtect = isVeryRecentChange || (isRecentChange && isSyncing);
+                        
+                        if (!shouldProtect) {
+                            // Actualizar el estado desde Firebase
                             existingAxie.classList.remove('banned', 'picked');
                             if (newRemoteStatus === 'banned') {
                                 existingAxie.classList.add('banned');
                             } else if (newRemoteStatus === 'picked') {
                                 existingAxie.classList.add('picked');
+                            }
+                            // Actualizar el timestamp para reflejar que aceptamos el cambio remoto
+                            existingAxie.dataset.lastStatusChange = Date.now().toString();
+                        } else {
+                            // Si el cambio local es muy reciente, ignorar la actualización remota
+                            // para evitar que sobrescriba el cambio del usuario actual
+                            // (solo en consola si es muy reciente para debugging)
+                            if (isVeryRecentChange) {
+                                console.log(`🛡️ Protegiendo cambio local muy reciente (< 500ms) para axie ${axieId}`);
                             }
                         }
                     }
@@ -1918,7 +1937,7 @@ function actualizarOrdenEnFirebase() {
                 setTimeout(() => {
                     isSyncing = false;
                     updateConnectionStatus('connected');
-                }, 300);
+                }, 200);
             })
             .catch((error) => {
                 console.error('❌ Error al guardar orden en Firebase:', error);
@@ -2020,8 +2039,9 @@ function setupRealtimeListener() {
         
         const timeSinceLastSave = now - lastSaveTime;
         
-        // Si acabamos de guardar, esperar un poco más
-        if (timeSinceLastSave < 1000 && isSyncing) {
+        // Si acabamos de guardar muy recientemente (< 300ms), esperar un poco
+        // Esto evita que nuestra propia actualización nos llegue de vuelta
+        if (timeSinceLastSave < 300 && isSyncing) {
             return;
         }
         
@@ -2046,7 +2066,9 @@ function setupRealtimeListener() {
                 return;
             }
             
-            if (timeSinceLastSave < 800) {
+            // Si acabamos de guardar muy recientemente, esperar un poco más
+            // pero permitir actualizaciones de otros usuarios después de 300ms
+            if (timeSinceLastSave < 300) {
                 return;
             }
             
@@ -2070,10 +2092,11 @@ function setupRealtimeListener() {
                     window.scrollTo(0, scrollY);
                 }, 50);
                 
-                // Permitir nuevas actualizaciones después de un tiempo
+                // Permitir nuevas actualizaciones después de un tiempo más corto
+                // para permitir actualizaciones más rápidas entre múltiples usuarios
                 setTimeout(() => {
                     isSyncing = false;
-                }, 300);
+                }, 200);
             }
         }, 200);
     }, (error) => {
@@ -2252,9 +2275,21 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     idLabel.className = 'axie-id-label';
     idLabel.textContent = `#${id}`;
 
+    // Prevenir múltiples clics rápidos usando atributo de datos
+    const CLICK_DEBOUNCE = 200; // ms
+    
     axieDiv.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        
+        const now = Date.now();
+        const lastClickTime = axieDiv.dataset.lastClickTime ? parseInt(axieDiv.dataset.lastClickTime) : 0;
+        
+        // Ignorar clics muy rápidos (debounce)
+        if (now - lastClickTime < CLICK_DEBOUNCE) {
+            return;
+        }
+        axieDiv.dataset.lastClickTime = now.toString();
         
         axieDiv.blur();
         if (document.activeElement) {
@@ -2268,17 +2303,37 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         const wasBanned = axieDiv.classList.contains('banned');
         const wasPicked = axieDiv.classList.contains('picked');
         
+        // Actualizar estado inmediatamente
+        let newStatus = '';
         if(wasBanned) {
             axieDiv.classList.remove('banned');
             axieDiv.classList.add('picked');
+            newStatus = 'picked';
         } else if(wasPicked) {
             axieDiv.classList.remove('picked');
+            newStatus = '';
         } else {
             axieDiv.classList.add('banned');
+            newStatus = 'banned';
         }
         
         axieDiv.style.transform = '';
         axieDiv.style.webkitTransform = '';
+        
+        // Forzar actualización del DOM antes de guardar
+        void axieDiv.offsetHeight; // Trigger reflow
+        
+        // Marcar el tiempo del cambio ANTES de guardar
+        const changeTime = Date.now();
+        axieDiv.dataset.lastStatusChange = changeTime.toString();
+        
+        // Guardar inmediatamente sin delay
+        lastSaveTime = changeTime;
+        
+        // Usar requestAnimationFrame para asegurar que el DOM se actualice antes de guardar
+        requestAnimationFrame(() => {
+            saveTeams(true);
+        });
         
         setTimeout(() => {
             axieDiv.blur();
@@ -2289,16 +2344,6 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
                 document.body.focus();
             }
         }, 50);
-        
-        const currentStatus = axieDiv.classList.contains('banned') ? 'banned' : 
-                              axieDiv.classList.contains('picked') ? 'picked' : '';
-        
-        axieDiv.dataset.lastStatusChange = Date.now().toString();
-        
-        setTimeout(() => {
-            lastSaveTime = Date.now();
-            saveTeams(true);
-        }, 100);
     });
 
     const deleteBtn = document.createElement('button');
