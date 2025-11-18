@@ -1751,6 +1751,7 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
             const currentAxieIds = currentAxies.map(axie => String(axie.dataset.axieId || ''));
             const newAxieIds = (newTeam.axies || []).map(axie => String(axie.id || '')).filter(id => id);
             
+            // Primero, eliminar axies que ya no están en el nuevo estado
             currentAxies.forEach(axieDiv => {
                 const axieId = String(axieDiv.dataset.axieId || '');
                 if (!newAxieIds.includes(axieId)) {
@@ -1758,13 +1759,22 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
                 }
             });
             
-            newTeam.axies.forEach(axie => {
+            // Luego, agregar o actualizar axies del nuevo estado
+            // Ordenar los axies nuevos para mantener consistencia
+            const sortedNewAxies = [...(newTeam.axies || [])].sort((a, b) => {
+                const idA = String(a.id || '');
+                const idB = String(b.id || '');
+                return idA.localeCompare(idB);
+            });
+            
+            sortedNewAxies.forEach(axie => {
                 const axieId = String(axie.id || '');
                 if (!axieId) return;
                 
                 const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axieId}"]`);
                 
                 if (!existingAxie) {
+                    // Agregar nuevo axie
                     addAxieToGrid(axieId, grid, String(axie.status || ''), false);
                 } else {
                     const currentLocalStatus = existingAxie.classList.contains('banned') ? 'banned' : 
@@ -2088,9 +2098,10 @@ function setupRealtimeListener() {
         
         const timeSinceLastSave = now - lastSaveTime;
         
-        // Si acabamos de guardar muy recientemente (< 300ms), esperar un poco
+        // Si acabamos de guardar muy recientemente (< 200ms), esperar un poco
         // Esto evita que nuestra propia actualización nos llegue de vuelta
-        if (timeSinceLastSave < 300 && isSyncing) {
+        // Pero permitir actualizaciones de otros usuarios después de 200ms
+        if (timeSinceLastSave < 200 && isSyncing) {
             return;
         }
         
@@ -2116,8 +2127,8 @@ function setupRealtimeListener() {
             }
             
             // Si acabamos de guardar muy recientemente, esperar un poco más
-            // pero permitir actualizaciones de otros usuarios después de 300ms
-            if (timeSinceLastSave < 300) {
+            // pero permitir actualizaciones de otros usuarios después de 200ms
+            if (timeSinceLastSave < 200) {
                 return;
             }
             
@@ -2125,6 +2136,7 @@ function setupRealtimeListener() {
             const newData = normalizeData(teams);
             
             if (currentData !== newData && newData !== '') {
+                console.log('🔄 Actualización en tiempo real detectada');
                 // Establecer flag ANTES de procesar para evitar loops
                 isSyncing = true;
                 lastUpdateTime = now;
@@ -2133,18 +2145,25 @@ function setupRealtimeListener() {
                 // Guardar posición de scroll antes de actualizar
                 const scrollY = window.scrollY;
                 
+                // Procesar la actualización
                 updateTeamsIncremental(teams || [], true);
                 localStorage.setItem('axieTeams', JSON.stringify(teams || []));
                 
+                // Forzar actualización del DOM
+                void document.body.offsetHeight; // Trigger reflow
+                
                 // Restaurar posición de scroll después de actualizar
-                setTimeout(() => {
-                    window.scrollTo(0, scrollY);
-                }, 50);
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        window.scrollTo(0, scrollY);
+                    }, 50);
+                });
                 
                 // Permitir nuevas actualizaciones después de un tiempo más corto
                 // para permitir actualizaciones más rápidas entre múltiples usuarios
                 setTimeout(() => {
                     isSyncing = false;
+                    console.log('✅ Sincronización completada, listo para nuevas actualizaciones');
                 }, 200);
             }
         }, 200);
@@ -2423,9 +2442,14 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         axieDiv.style.opacity = '0';
         setTimeout(() => {
             axieDiv.remove();
-            setTimeout(() => {
-                saveTeams();
-            }, 100);
+            // Forzar actualización del DOM antes de guardar
+            void grid.offsetHeight; // Trigger reflow
+            // Guardar inmediatamente para que se propague en tiempo real
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    saveTeams(true);
+                }, 100);
+            });
         }, 300);
     };
 
@@ -2462,12 +2486,19 @@ function addAxie(teamId) {
             }
             addedCount++;
             
+            // Cuando todos los axies se hayan agregado, guardar
             if(addedCount === validIds.length) {
-                setTimeout(() => {
-                    if(validCount > 0) {
-                        saveTeams();
-                    }
-                }, 300);
+                // Forzar actualización del DOM antes de guardar
+                void grid.offsetHeight; // Trigger reflow
+                // Esperar un poco más para asegurar que todas las imágenes se hayan agregado al DOM
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        if(validCount > 0) {
+                            // Guardar inmediatamente para que se propague en tiempo real
+                            saveTeams(true);
+                        }
+                    }, 200);
+                });
             }
         }, index * 30);
     });
@@ -2597,9 +2628,14 @@ function clearAllAxies(teamId) {
     
     setTimeout(() => {
         axies.forEach(axie => axie.remove());
-        setTimeout(() => {
-            saveTeams();
-        }, 100);
+        // Forzar actualización del DOM antes de guardar
+        void grid.offsetHeight; // Trigger reflow
+        // Guardar inmediatamente después de limpiar
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                saveTeams(true);
+            }, 100);
+        });
     }, 300);
 }
 
