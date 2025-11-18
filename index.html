@@ -376,31 +376,16 @@ h1 {
     box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05);
     transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
     border: 2px solid var(--border-color);
-    cursor: grab;
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
-.team-card:active {
-    cursor: grabbing;
-}
-
 .team-card:hover {
     box-shadow: var(--shadow-lg);
     background: var(--bg-card-hover);
     border-color: var(--border-hover);
-}
-
-.team-card.dragging {
-    opacity: 0.6;
-    z-index: 1000;
-}
-
-.team-card.drag-over {
-    border: 2px solid rgba(46, 213, 115, 0.8);
-    background: rgba(46, 213, 115, 0.1);
 }
 
 .team-header {
@@ -1370,10 +1355,6 @@ function showMainContent() {
             setTimeout(initializeContent, 100);
             return;
         }
-        
-        if (typeof setupContainerDragAndDrop === 'function') {
-            setupContainerDragAndDrop();
-        }
     }
     
     setTimeout(initializeContent, 150);
@@ -1604,6 +1585,11 @@ function getTeamsData() {
 }
 
 function saveTeams(immediate = false) {
+    // No guardar si estamos sincronizando desde Firebase
+    if (isSyncing) {
+        return;
+    }
+    
     const teams = getTeamsData();
     const now = Date.now();
     
@@ -1616,25 +1602,27 @@ function saveTeams(immediate = false) {
         clearTimeout(window.saveTimeout);
         
         const saveToFirebase = () => {
-            if (pendingSave) {
-                pendingSave = false;
-                const wasSyncing = isSyncing;
-                isSyncing = true;
-                updateConnectionStatus('syncing');
-                
-                db.ref(DB_PATH).set(teams)
-                    .then(() => {
-                        setTimeout(() => {
-                            isSyncing = false;
-                            updateConnectionStatus('connected');
-                        }, 300);
-                    })
-                    .catch((error) => {
-                        console.error('❌ Error al guardar en Firebase:', error);
+            // Verificar nuevamente antes de guardar
+            if (isSyncing || !pendingSave) {
+                return;
+            }
+            
+            pendingSave = false;
+            isSyncing = true;
+            updateConnectionStatus('syncing');
+            
+            db.ref(DB_PATH).set(teams)
+                .then(() => {
+                    setTimeout(() => {
                         isSyncing = false;
                         updateConnectionStatus('connected');
-                    });
-            }
+                    }, 300);
+                })
+                .catch((error) => {
+                    console.error('❌ Error al guardar en Firebase:', error);
+                    isSyncing = false;
+                    updateConnectionStatus('connected');
+                });
         };
         
         if (immediate) {
@@ -1737,6 +1725,8 @@ function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
                         const timeSinceLastChange = Date.now() - lastStatusChange;
                         const timeSinceLastSave = Date.now() - lastSaveTime;
                         
+                        // Solo actualizar si ha pasado suficiente tiempo desde el último cambio local
+                        // o si no estamos sincronizando y ha pasado tiempo desde el último guardado
                         if (timeSinceLastChange > 1500 || (timeSinceLastSave > 1000 && !isSyncing)) {
                             existingAxie.classList.remove('banned', 'picked');
                             if (newRemoteStatus === 'banned') {
@@ -1792,6 +1782,16 @@ function createTeamElement(team, teamId) {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const moveUpBtn = document.createElement('button');
+    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.title = 'Mover arriba';
+    moveUpBtn.onclick = () => moverParaArriba(teamId);
+    
+    const moveDownBtn = document.createElement('button');
+    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.title = 'Mover abajo';
+    moveDownBtn.onclick = () => moverParaAbajo(teamId);
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -1801,6 +1801,8 @@ function createTeamElement(team, teamId) {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamId);
     
+    buttonsContainer.appendChild(moveUpBtn);
+    buttonsContainer.appendChild(moveDownBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
@@ -1829,314 +1831,101 @@ function createTeamElement(team, teamId) {
     `;
     teamDiv.appendChild(addAxieDiv);
     
-    setupDragAndDrop(teamDiv);
-    
     return teamDiv;
 }
 
-function setupDragAndDrop(teamCard) {
-    teamCard.draggable = true;
+function moverParaArriba(teamId) {
+    if (isSyncing) return; // No mover si estamos sincronizando
     
-    const header = teamCard.querySelector('.team-header');
-    const buttons = teamCard.querySelectorAll('button');
-    const inputs = teamCard.querySelectorAll('input');
+    const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamCard) return;
     
-    [header, ...buttons, ...inputs].forEach(element => {
-        if (element) {
-            element.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-            });
-            element.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-            });
-            element.addEventListener('dragstart', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            });
-        }
-    });
+    const prevTeam = teamCard.previousElementSibling;
+    if (!prevTeam || !prevTeam.classList.contains('team-card')) {
+        return; // Ya está en la parte superior
+    }
     
-    let touchStartY = 0;
-    let touchStartX = 0;
-    let isDragging = false;
-    let touchTarget = null;
+    // Mover el equipo hacia arriba en el DOM
+    teamCard.parentNode.insertBefore(teamCard, prevTeam);
     
-    const canDrag = (target) => {
-        if (!target) return false;
-        if (target.tagName === 'BUTTON' || 
-            target.tagName === 'INPUT' ||
-            target.closest('button.axie-delete') ||
-            target.closest('.axie-container') ||
-            target.closest('.team-header button') ||
-            target.closest('.add-axie')) {
-            return false;
-        }
-        return true;
-    };
-    
-    const startDrag = (e, touchEvent = null) => {
-        const target = touchEvent ? touchEvent.target : (e ? e.target : null);
-        if (!target || !canDrag(target)) {
-            return false;
-        }
-        
-        const container = document.getElementById('teamsContainer');
-        const currentOrder = Array.from(container.querySelectorAll('.team-card')).map(card => card.dataset.teamId);
-        teamCard.dataset.previousOrder = JSON.stringify(currentOrder);
-        
-        teamCard.classList.add('dragging');
-        isDragging = true;
-        
-        if (e && e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', teamCard.dataset.teamId);
-        }
-        
-        return true;
-    };
-    
-    const endDrag = () => {
-        if (!isDragging) return;
-        
-        teamCard.classList.remove('dragging');
-        document.querySelectorAll('.team-card').forEach(card => {
-            card.classList.remove('drag-over');
-        });
-        
-        const container = document.getElementById('teamsContainer');
-        const currentOrder = Array.from(container.querySelectorAll('.team-card')).map(card => card.dataset.teamId);
-        const previousOrder = teamCard.dataset.previousOrder ? JSON.parse(teamCard.dataset.previousOrder) : null;
-        
-        if (previousOrder && JSON.stringify(currentOrder) !== JSON.stringify(previousOrder)) {
-            setTimeout(() => {
-                saveTeams();
-            }, 100);
-        }
-        
-        isDragging = false;
-        touchTarget = null;
-    };
-    
-    const handleDragOver = (clientY, clientX = null) => {
-        if (!isDragging) return;
-        
-        const dragging = document.querySelector('.dragging');
-        if (!dragging || dragging === teamCard) return;
-        
-        const box = teamCard.getBoundingClientRect();
-        const centerY = box.top + box.height / 2;
-        const container = teamCard.parentElement;
-        
-        if (clientY < centerY) {
-            container.insertBefore(dragging, teamCard);
-        } else {
-            const nextSibling = teamCard.nextElementSibling;
-            if (nextSibling && nextSibling.classList.contains('team-card') && nextSibling !== dragging) {
-                container.insertBefore(dragging, nextSibling);
-            } else {
-                container.appendChild(dragging);
-            }
-        }
-        
-        teamCard.classList.add('drag-over');
-    };
-    
-    teamCard.addEventListener('dragstart', (e) => {
-        if (!startDrag(e)) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-    });
-    
-    teamCard.addEventListener('dragend', () => {
-        endDrag();
-    });
-    
-    teamCard.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'move';
-        }
-        handleDragOver(e.clientY);
-    });
-    
-    teamCard.addEventListener('dragleave', () => {
-        teamCard.classList.remove('drag-over');
-    });
-    
-    teamCard.addEventListener('drop', (e) => {
-        e.preventDefault();
-        teamCard.classList.remove('drag-over');
-        
-        setTimeout(() => {
-            saveTeams();
-        }, 50);
-    });
-    
-    teamCard.addEventListener('touchstart', (e) => {
-        if (!canDrag(e.target)) return;
-        
-        touchStartY = e.touches[0].clientY;
-        touchStartX = e.touches[0].clientX;
-        touchTarget = e.target;
-        isDragging = false;
-        
-        const touchDelay = setTimeout(() => {
-            if (startDrag(null, e)) {
-                teamCard.style.transition = 'none';
-            }
-        }, 400);
-        
-        teamCard.dataset.touchDelay = touchDelay;
-    }, { passive: true });
-    
-    teamCard.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        const deltaY = Math.abs(touch.clientY - touchStartY);
-        const deltaX = Math.abs(touch.clientX - touchStartX);
-        
-        if (!isDragging && teamCard.dataset.touchDelay) {
-            if (deltaY > 30 || deltaX > 30) {
-                clearTimeout(teamCard.dataset.touchDelay);
-                delete teamCard.dataset.touchDelay;
-                
-                if (startDrag(null, e)) {
-                    teamCard.style.transition = 'none';
-                    e.preventDefault();
-                }
-            } else {
-                clearTimeout(teamCard.dataset.touchDelay);
-                delete teamCard.dataset.touchDelay;
-            }
-        }
-        
-        if (isDragging) {
-            e.preventDefault();
-            
-            const offsetY = touch.clientY - touchStartY;
-            teamCard.style.transform = `translateY(${offsetY}px)`;
-            teamCard.style.opacity = '0.8';
-            teamCard.style.zIndex = '1000';
-            
-            const container = document.getElementById('teamsContainer');
-            const cards = Array.from(container.querySelectorAll('.team-card:not(.dragging)'));
-            let afterElement = null;
-            
-            const currentY = touch.clientY;
-            
-            for (const card of cards) {
-                const box = card.getBoundingClientRect();
-                const centerY = box.top + box.height / 2;
-                
-                if (currentY < centerY) {
-                    afterElement = card;
-                    break;
-                }
-            }
-            
-            if (afterElement && afterElement !== teamCard.nextSibling) {
-                container.insertBefore(teamCard, afterElement);
-                touchStartY = touch.clientY - offsetY;
-            } else if (!afterElement && cards.length > 0) {
-                const lastCard = cards[cards.length - 1];
-                if (teamCard !== lastCard.nextSibling) {
-                    container.insertBefore(teamCard, lastCard.nextSibling);
-                    touchStartY = touch.clientY - offsetY;
-                }
-            } else if (cards.length === 0) {
-                container.appendChild(teamCard);
-                touchStartY = touch.clientY - offsetY;
-            }
-        }
-    }, { passive: false });
-    
-    teamCard.addEventListener('touchend', (e) => {
-        if (teamCard.dataset.touchDelay) {
-            clearTimeout(teamCard.dataset.touchDelay);
-            delete teamCard.dataset.touchDelay;
-        }
-        
-        if (isDragging) {
-            e.preventDefault();
-            teamCard.style.transform = '';
-            teamCard.style.opacity = '';
-            teamCard.style.zIndex = '';
-            teamCard.style.transition = '';
-            endDrag();
-        }
-    });
-    
-    teamCard.addEventListener('touchcancel', () => {
-        if (teamCard.dataset.touchDelay) {
-            clearTimeout(teamCard.dataset.touchDelay);
-            delete teamCard.dataset.touchDelay;
-        }
-        
-        if (isDragging) {
-            teamCard.style.transform = '';
-            teamCard.style.opacity = '';
-            teamCard.style.zIndex = '';
-            teamCard.style.transition = '';
-            endDrag();
-        }
-    });
+    // Guardar inmediatamente en Firebase
+    actualizarOrdenEnFirebase();
 }
 
-function setupContainerDragAndDrop() {
+function moverParaAbajo(teamId) {
+    if (isSyncing) return; // No mover si estamos sincronizando
+    
+    const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+    if (!teamCard) return;
+    
+    const nextTeam = teamCard.nextElementSibling;
+    if (!nextTeam || !nextTeam.classList.contains('team-card')) {
+        return; // Ya está en la parte inferior
+    }
+    
+    // Mover el equipo hacia abajo en el DOM
+    const afterNext = nextTeam.nextElementSibling;
+    if (afterNext) {
+        teamCard.parentNode.insertBefore(teamCard, afterNext);
+    } else {
+        // Si es el último, mover al final
+        teamCard.parentNode.appendChild(teamCard);
+    }
+    
+    // Guardar inmediatamente en Firebase
+    actualizarOrdenEnFirebase();
+}
+
+function actualizarOrdenEnFirebase() {
+    if (isSyncing) return; // Evitar loop infinito
+    
     const container = document.getElementById('teamsContainer');
     if (!container) return;
     
-    const handleContainerDragOver = (clientY) => {
-        const dragging = document.querySelector('.dragging');
-        if (!dragging) return;
-        
-        const cards = Array.from(container.querySelectorAll('.team-card:not(.dragging)'));
-        let afterElement = null;
-        
-        for (const card of cards) {
-            const box = card.getBoundingClientRect();
-            const centerY = box.top + box.height / 2;
-            
-            if (clientY < centerY) {
-                afterElement = card;
-                break;
-            }
-        }
-        
-        if (afterElement) {
-            container.insertBefore(dragging, afterElement);
-        } else if (cards.length > 0) {
-            container.insertBefore(dragging, cards[cards.length - 1].nextSibling);
-        } else {
-            container.appendChild(dragging);
-        }
-    };
+    const teams = [];
+    const teamCards = Array.from(container.querySelectorAll('.team-card'));
     
-    container.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'move';
-        }
-        handleContainerDragOver(e.clientY);
+    teamCards.forEach((teamCard, index) => {
+        const teamId = teamCard.dataset.teamId;
+        const nameElement = teamCard.querySelector('.team-name');
+        if (!nameElement) return;
+        
+        const name = nameElement.innerText || nameElement.textContent || '';
+        const axies = [];
+        const axieContainers = teamCard.querySelectorAll('.axie-container');
+        axieContainers.forEach(axieDiv => {
+            const id = axieDiv.dataset.axieId;
+            if (!id) return;
+            let status = '';
+            if(axieDiv.classList.contains('banned')) status = 'banned';
+            else if(axieDiv.classList.contains('picked')) status = 'picked';
+            axies.push({id: String(id), status: status});
+        });
+        teams.push({id: String(teamId), name: name, axies: axies});
     });
     
-    container.addEventListener('drop', (e) => {
-        e.preventDefault();
-        
-        setTimeout(() => {
-            saveTeams();
-        }, 50);
-    });
+    // Guardar en localStorage
+    localStorage.setItem('axieTeams', JSON.stringify(teams));
     
-    container.addEventListener('touchmove', (e) => {
-        const dragging = document.querySelector('.dragging');
-        if (dragging) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleContainerDragOver(touch.clientY);
-        }
-    }, { passive: false });
+    // Guardar en Firebase si está configurado
+    if (isFirebaseConfigured && db) {
+        isSyncing = true;
+        updateConnectionStatus('syncing');
+        
+        db.ref(DB_PATH).set(teams)
+            .then(() => {
+                lastSaveTime = Date.now();
+                setTimeout(() => {
+                    isSyncing = false;
+                    updateConnectionStatus('connected');
+                }, 300);
+            })
+            .catch((error) => {
+                console.error('❌ Error al guardar orden en Firebase:', error);
+                isSyncing = false;
+                updateConnectionStatus('connected');
+            });
+    }
 }
 
 function renderTeams(teams, isRealtimeUpdate = false) {
@@ -2216,15 +2005,22 @@ function setupRealtimeListener() {
     let updateTimeout = null;
     
     realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
+        // Verificar al inicio para evitar procesamiento innecesario
+        if (isSyncing) {
+            return;
+        }
+        
         const teams = snapshot.val();
         const now = Date.now();
         
+        // Evitar actualizaciones muy frecuentes
         if (now - lastUpdateTime < 300) {
             return;
         }
         
         const timeSinceLastSave = now - lastSaveTime;
         
+        // Si acabamos de guardar, esperar un poco más
         if (timeSinceLastSave < 1000 && isSyncing) {
             return;
         }
@@ -2245,7 +2041,12 @@ function setupRealtimeListener() {
         
         clearTimeout(updateTimeout);
         updateTimeout = setTimeout(() => {
-            if (timeSinceLastSave < 800 && isSyncing) {
+            // Verificar nuevamente antes de procesar
+            if (isSyncing) {
+                return;
+            }
+            
+            if (timeSinceLastSave < 800) {
                 return;
             }
             
@@ -2253,17 +2054,26 @@ function setupRealtimeListener() {
             const newData = normalizeData(teams);
             
             if (currentData !== newData && newData !== '') {
-                const wasSyncing = isSyncing;
+                // Establecer flag ANTES de procesar para evitar loops
                 isSyncing = true;
                 lastUpdateTime = now;
                 pendingSave = false;
                 
+                // Guardar posición de scroll antes de actualizar
+                const scrollY = window.scrollY;
+                
                 updateTeamsIncremental(teams || [], true);
                 localStorage.setItem('axieTeams', JSON.stringify(teams || []));
                 
+                // Restaurar posición de scroll después de actualizar
+                setTimeout(() => {
+                    window.scrollTo(0, scrollY);
+                }, 50);
+                
+                // Permitir nuevas actualizaciones después de un tiempo
                 setTimeout(() => {
                     isSyncing = false;
-                }, 400);
+                }, 300);
             }
         }, 200);
     }, (error) => {
@@ -2316,6 +2126,16 @@ function addTeam() {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'team-buttons';
     
+    const moveUpBtn = document.createElement('button');
+    moveUpBtn.innerHTML = '⬆';
+    moveUpBtn.title = 'Mover arriba';
+    moveUpBtn.onclick = () => moverParaArriba(teamCount);
+    
+    const moveDownBtn = document.createElement('button');
+    moveDownBtn.innerHTML = '⬇';
+    moveDownBtn.title = 'Mover abajo';
+    moveDownBtn.onclick = () => moverParaAbajo(teamCount);
+    
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-axies-btn';
     clearBtn.innerHTML = '🗑️ Limpiar';
@@ -2325,6 +2145,8 @@ function addTeam() {
     deleteBtn.innerHTML = '🗑️ Eliminar';
     deleteBtn.onclick = () => deleteTeam(teamCount);
     
+    buttonsContainer.appendChild(moveUpBtn);
+    buttonsContainer.appendChild(moveDownBtn);
     buttonsContainer.appendChild(clearBtn);
     buttonsContainer.appendChild(deleteBtn);
     
