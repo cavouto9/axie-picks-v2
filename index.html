@@ -1443,6 +1443,8 @@ let isSyncing = false;
 let realtimeListener = null;
 let lastSaveTime = 0;
 let pendingSave = false;
+let saveQueue = []; // Cola para asegurar que los cambios se guarden en orden
+let isSaving = false; // Flag para saber si estamos guardando actualmente
 
 function isFirebaseConfigValid() {
     return firebaseConfig.apiKey && 
@@ -1585,11 +1587,20 @@ function getTeamsData() {
 }
 
 function saveTeams(immediate = false) {
-    // No guardar si estamos sincronizando desde Firebase
-    if (isSyncing) {
+    // No guardar si estamos sincronizando desde Firebase (a menos que sea inmediato)
+    if (isSyncing && !immediate) {
+        // Agregar a la cola para guardar después
+        saveQueue.push({ immediate: false, timestamp: Date.now() });
         return;
     }
     
+    // Si ya estamos guardando, agregar a la cola
+    if (isSaving) {
+        saveQueue.push({ immediate: immediate, timestamp: Date.now() });
+        return;
+    }
+    
+    // Leer el estado actual del DOM (más reciente)
     const teams = getTeamsData();
     const now = Date.now();
     
@@ -1598,12 +1609,18 @@ function saveTeams(immediate = false) {
     if (isFirebaseConfigured && db) {
         lastSaveTime = now;
         pendingSave = true;
+        isSaving = true;
         
         clearTimeout(window.saveTimeout);
         
         const saveToFirebase = () => {
+            // Leer el estado MÁS RECIENTE del DOM antes de guardar
+            const currentTeams = getTeamsData();
+            
             // Verificar nuevamente antes de guardar
-            if (isSyncing || !pendingSave) {
+            if (isSyncing && !immediate) {
+                isSaving = false;
+                processSaveQueue();
                 return;
             }
             
@@ -1611,18 +1628,25 @@ function saveTeams(immediate = false) {
             isSyncing = true;
             updateConnectionStatus('syncing');
             
-            db.ref(DB_PATH).set(teams)
+            db.ref(DB_PATH).set(currentTeams)
                 .then(() => {
+                    lastSaveTime = Date.now();
                     // Reducir el tiempo de espera para permitir actualizaciones más rápidas
                     setTimeout(() => {
                         isSyncing = false;
+                        isSaving = false;
                         updateConnectionStatus('connected');
+                        // Procesar la cola después de guardar
+                        processSaveQueue();
                     }, 200);
                 })
                 .catch((error) => {
                     console.error('❌ Error al guardar en Firebase:', error);
                     isSyncing = false;
+                    isSaving = false;
                     updateConnectionStatus('connected');
+                    // Procesar la cola incluso si hay error
+                    processSaveQueue();
                 });
         };
         
@@ -1630,8 +1654,28 @@ function saveTeams(immediate = false) {
             saveToFirebase();
         } else {
             // Reducir el debounce para guardar más rápido y permitir actualizaciones más rápidas
-            window.saveTimeout = setTimeout(saveToFirebase, 200);
+            window.saveTimeout = setTimeout(saveToFirebase, 150);
         }
+    } else {
+        isSaving = false;
+    }
+}
+
+function processSaveQueue() {
+    if (saveQueue.length === 0 || isSaving || isSyncing) {
+        return;
+    }
+    
+    // Procesar el siguiente elemento de la cola
+    const nextSave = saveQueue.shift();
+    if (nextSave) {
+        // Pequeño delay para asegurar que el DOM se actualice completamente
+        // y que cualquier cambio pendiente se refleje
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                saveTeams(nextSave.immediate);
+            }, 30);
+        });
     }
 }
 
@@ -2275,8 +2319,9 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
     idLabel.className = 'axie-id-label';
     idLabel.textContent = `#${id}`;
 
-    // Prevenir múltiples clics rápidos usando atributo de datos
-    const CLICK_DEBOUNCE = 200; // ms
+    // Prevenir múltiples clics muy rápidos usando atributo de datos
+    // Reducido porque la cola de guardado maneja el orden
+    const CLICK_DEBOUNCE = 100; // ms
     
     axieDiv.addEventListener('click', (e) => {
         e.preventDefault();
@@ -2327,12 +2372,25 @@ function addAxieToGrid(id, grid, status='', shouldSave = true) {
         const changeTime = Date.now();
         axieDiv.dataset.lastStatusChange = changeTime.toString();
         
-        // Guardar inmediatamente sin delay
-        lastSaveTime = changeTime;
-        
-        // Usar requestAnimationFrame para asegurar que el DOM se actualice antes de guardar
+        // Usar requestAnimationFrame para asegurar que el DOM se actualice completamente
+        // y luego usar un pequeño delay para asegurar que el estado se refleje correctamente
         requestAnimationFrame(() => {
-            saveTeams(true);
+            // Doble verificación: leer el estado actual del DOM para asegurar que es correcto
+            const currentBanned = axieDiv.classList.contains('banned');
+            const currentPicked = axieDiv.classList.contains('picked');
+            const actualStatus = currentBanned ? 'banned' : (currentPicked ? 'picked' : '');
+            
+            // Solo guardar si el estado coincide con lo que esperamos
+            if (actualStatus === newStatus || (newStatus === '' && actualStatus === '')) {
+                lastSaveTime = changeTime;
+                saveTeams(true);
+            } else {
+                // Si hay discrepancia, esperar un poco más y reintentar
+                setTimeout(() => {
+                    lastSaveTime = Date.now();
+                    saveTeams(true);
+                }, 50);
+            }
         });
         
         setTimeout(() => {
