@@ -1,1536 +1,976 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.3, user-scalable=yes">
-<title>Axie Teams Manager</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/LDM0FH3M/favicon.png">
-<link rel="apple-touch-icon" href="https://i.ibb.co/LDM0FH3M/favicon.png">
-<style>
-* {
-    box-sizing: border-box;
-}
-
-html {
-    position: relative;
-    overflow-x: hidden;
-}
-
-body {
-    width: 100%;
-}
-
-:root {
-    --bg-primary: #0f0f1e;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #16213e;
-    --bg-card: #2a1f4a;
-    --bg-card-hover: #322050;
-    --bg-input: rgba(255, 255, 255, 0.08);
-    --bg-input-focus: rgba(255, 255, 255, 0.15);
-    --bg-axie-container: rgba(30, 30, 50, 0.6);
-    --bg-button: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --bg-button-hover: linear-gradient(135deg, #7c8ef0 0%, #8a5fb8 100%);
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-muted: rgba(255, 255, 255, 0.6);
-    --border-color: rgba(255, 255, 255, 0.25);
-    --border-hover: rgba(255, 255, 255, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-    --accent-primary: #667eea;
-    --accent-secondary: #764ba2;
-    --gradient-bg: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-}
-
-[data-theme="light"] {
-    --bg-primary: #f5f7fa;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #e8ecf1;
-    --bg-card: #f0edff;
-    --bg-card-hover: #e8e4ff;
-    --bg-input: rgba(0, 0, 0, 0.05);
-    --bg-input-focus: rgba(0, 0, 0, 0.1);
-    --bg-axie-container: rgba(240, 240, 245, 0.4);
-    --bg-button: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --bg-button-hover: linear-gradient(135deg, #7c8ef0 0%, #8a5fb8 100%);
-    --text-primary: #1a1a2e;
-    --text-secondary: rgba(26, 26, 46, 0.8);
-    --text-muted: rgba(26, 26, 46, 0.6);
-    --border-color: rgba(0, 0, 0, 0.15);
-    --border-hover: rgba(0, 0, 0, 0.25);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
-    --accent-primary: #667eea;
-    --accent-secondary: #764ba2;
-    --gradient-bg: linear-gradient(135deg, #f5f7fa 0%, #ffffff 50%, #e8ecf1 100%);
-}
-
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-    background: var(--gradient-bg);
-    background-attachment: fixed;
-    color: var(--text-primary);
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-    transition: background 0.3s ease, color 0.3s ease;
-}
-
-body.login-required .main-content {
-    display: none;
-}
-
-.login-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--gradient-bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    backdrop-filter: blur(10px);
-}
-
-.login-overlay.hidden {
-    display: none;
-}
-
-.login-container {
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-    width: 100%;
-    max-width: 400px;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.login-container h2 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.login-form input[type="text"],
-.login-form input[type="password"] {
-    padding: 14px 18px;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    background: var(--bg-input);
-    backdrop-filter: blur(10px);
-    color: var(--text-primary);
-    font-size: 15px;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-sm);
-    width: 100%;
-}
-
-.login-form input[type="text"]::placeholder,
-.login-form input[type="password"]::placeholder {
-    color: var(--text-muted);
-}
-
-.login-form input[type="text"]:focus,
-.login-form input[type="password"]:focus {
-    outline: none;
-    border-color: var(--border-hover);
-    background: var(--bg-input-focus);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.login-form .remember-me {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-secondary);
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.login-form .remember-me input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--accent-primary);
-}
-
-.login-form button {
-    background: var(--bg-button);
-    color: #fff;
-    font-weight: 700;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-    font-size: 15px;
-    letter-spacing: 0.3px;
-    margin-top: 10px;
-}
-
-.login-form button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-button-hover);
-}
-
-.login-error {
-    background: rgba(255, 71, 87, 0.2);
-    border: 2px solid rgba(255, 71, 87, 0.5);
-    color: #ff4757;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    text-align: center;
-    display: none;
-    animation: shake 0.5s ease;
-}
-
-.login-error.show {
-    display: block;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
-}
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-    transition: opacity 0.3s ease;
-}
-
-[data-theme="light"] body::before {
-    opacity: 0.5;
-}
-
-.theme-toggle {
-    background: var(--bg-button);
-    color: #fff;
-    font-weight: 700;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-    font-size: 15px;
-    letter-spacing: 0.3px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.theme-toggle:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-button-hover);
-}
-
-.theme-toggle-icon {
-    font-size: 20px;
-    transition: transform 0.3s ease;
-}
-
-.theme-toggle:hover .theme-toggle-icon {
-    transform: rotate(20deg);
-}
-
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.5rem;
-    font-weight: 800;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    letter-spacing: -0.5px;
-    position: relative;
-    z-index: 1;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.add-team {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 40px;
-    position: relative;
-    z-index: 1;
-}
-
-.add-team input[type="text"] {
-    padding: 14px 18px;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    width: 220px;
-    background: var(--bg-input);
-    backdrop-filter: blur(10px);
-    color: var(--text-primary);
-    font-size: 15px;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-sm);
-}
-
-.add-team input[type="text"]::placeholder {
-    color: var(--text-muted);
-}
-
-.add-team input[type="text"]:focus {
-    outline: none;
-    border-color: var(--border-hover);
-    background: var(--bg-input-focus);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.add-team button {
-    background: var(--bg-button);
-    color: #fff;
-    font-weight: 700;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-    font-size: 15px;
-    letter-spacing: 0.3px;
-}
-
-.add-team button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-button-hover);
-}
-
-.add-team button:active {
-    transform: translateY(0);
-}
-
-#teamsContainer {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    align-items: stretch;
-    position: relative;
-    z-index: 1;
-    padding: 0 20px;
-    max-width: 1800px;
-    margin: 0 auto;
-    grid-auto-rows: auto;
-}
-
-@media (max-width: 700px) {
-    #teamsContainer {
-        padding: 0 10px;
-        gap: 16px;
-    }
-}
-
-@media (max-width: 500px) {
-    #teamsContainer {
-        padding: 0 8px;
-        gap: 12px;
-    }
-}
-
-.team-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 20px;
-    width: 100%;
-    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
-    border: 2px solid var(--border-color);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.team-card:hover {
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
-}
-
-.team-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: none;
-    gap: 6px;
-    flex-wrap: nowrap;
-}
-
-.team-header .team-buttons {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-    flex-wrap: nowrap;
-    align-items: center;
-}
-
-.team-name {
-    font-size: 18px;
-    font-weight: 700;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    letter-spacing: -0.5px;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    flex: 1;
-}
-
-.team-name:hover {
-    background: var(--bg-input);
-}
-
-.team-name-input {
-    font-size: 18px;
-    font-weight: 700;
-    background: var(--bg-input);
-    border: 2px solid var(--border-hover);
-    color: var(--text-primary);
-    padding: 4px 8px;
-    border-radius: 6px;
-    width: 100%;
-    max-width: 300px;
-    outline: none;
-}
-
-.team-header button {
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-weight: 600;
-    border: 2px solid var(--border-color);
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-}
-
-.team-header button:hover {
-    background: rgba(255, 71, 87, 0.2);
-    border-color: rgba(255, 71, 87, 0.5);
-    color: #ff4757;
-    transform: scale(1.05);
-}
-
-.team-header button.clear-axies-btn {
-    background: rgba(255, 193, 7, 0.2);
-    border-color: rgba(255, 193, 7, 0.5);
-    color: #ffc107;
-}
-
-.team-header button.clear-axies-btn:hover {
-    background: rgba(255, 193, 7, 0.3);
-    border-color: rgba(255, 193, 7, 0.7);
-    color: #ffc107;
-}
-
-.axie-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    justify-content: center;
-    padding: 5px;
-    width: 100%;
-    min-height: 0;
-    flex-grow: 1;
-    align-content: start;
-}
-
-.axie-container {
-    position: relative;
-    cursor: pointer;
-    border-radius: 16px;
-    overflow: visible;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 2px solid var(--border-color);
-    width: 100%;
-    background: var(--bg-axie-container);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-md), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-    display: flex;
-    flex-direction: column;
-}
-
-.axie-container .axie-image-wrapper {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: 13px 13px 0 0;
-}
-
-.axie-container .axie-id-label {
-    padding: 4px 6px;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    background: var(--bg-secondary);
-    border-radius: 0 0 13px 13px;
-    border-top: 1px solid var(--border-color);
-    min-height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    letter-spacing: 0.5px;
-}
-
-.axie-container:hover {
-    transform: scale(1.1) rotate(2deg);
-    box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-    z-index: 10;
-    border-color: var(--border-hover);
-    background: var(--bg-card);
-}
-
-.axie-container.banned:hover,
-.axie-container.picked:hover {
-    transform: scale(1.05) !important;
-}
-
-.axie-container:active,
-.axie-container:focus {
-    outline: none !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-}
-
-.axie-container:active:focus {
-    outline: none !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-}
-
-.axie-container:active *,
-.axie-container:focus * {
-    transform: none !important;
-    -webkit-transform: none !important;
-}
-
-.axie-container:active .axie-image-wrapper img,
-.axie-container:focus .axie-image-wrapper img {
-    transform: scale(1.1) !important;
-    -webkit-transform: scale(1.1) !important;
-}
-
-.axie-container .axie-image-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center center;
-    transform: scale(1.1);
-    transition: all 0.3s ease;
-    background: transparent;
-    -webkit-user-drag: none;
-    user-select: none;
-    -webkit-user-select: none;
-    pointer-events: none;
-}
-
-.axie-container .axie-image-wrapper img.loading {
-    opacity: 0.5;
-    filter: blur(5px);
-}
-
-.axie-container .axie-image-wrapper img.error {
-    opacity: 0.3;
-}
-
-.axie-container.banned {
-    border-color: #ff4757;
-    background: rgba(255, 71, 87, 0.1);
-    box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
-    transform: scale(1.05);
-    transition: none !important;
-}
-
-.axie-container.banned::after {
-    content: '🚫';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    z-index: 5;
-    pointer-events: none;
-}
-
-.axie-container.picked {
-    border-color: #2ed573;
-    background: rgba(46, 213, 115, 0.1);
-    box-shadow: 0 0 20px rgba(46, 213, 115, 0.4);
-    transform: scale(1.05);
-    transition: none !important;
-}
-
-.axie-container.picked::after {
-    content: '✓';
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: #2ed573;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
-    z-index: 5;
-    box-shadow: 0 2px 10px rgba(46, 213, 115, 0.5);
-}
-
-.axie-delete {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: var(--bg-secondary);
-    color: #ff4757;
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-weight: bold;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-sm);
-    z-index: 10;
-    line-height: 1;
-}
-
-.axie-delete:hover {
-    background: #ff4757;
-    color: white;
-    transform: scale(1.2) rotate(90deg);
-    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.5);
-}
-
-.add-axie {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: auto;
-    padding-top: 12px;
-    border-top: none;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-}
-
-.add-axie input {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid var(--border-color);
-    width: 140px;
-    background: var(--bg-input);
-    backdrop-filter: blur(10px);
-    color: var(--text-primary);
-    font-size: 12px;
-    transition: all 0.3s ease;
-}
-
-.add-axie input::placeholder {
-    color: var(--text-muted);
-}
-
-.add-axie input:focus {
-    outline: none;
-    border-color: var(--border-hover);
-    background: var(--bg-input-focus);
-    transform: translateY(-2px);
-}
-
-.add-axie button {
-    background: var(--bg-button);
-    color: #fff;
-    font-weight: 700;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 12px;
-    box-shadow: var(--shadow-sm);
-}
-
-.add-axie button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    background: var(--bg-button-hover);
-}
-
-.add-axie button.copy-ids-btn {
-    background: rgba(102, 126, 234, 0.2);
-    border: 2px solid rgba(102, 126, 234, 0.5);
-    color: #667eea;
-    font-size: 11px;
-    padding: 6px 12px;
-}
-
-.add-axie button.copy-ids-btn:hover {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: rgba(102, 126, 234, 0.7);
-    color: #667eea;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-secondary);
-    font-size: 18px;
-}
-
-.status-indicator {
-    display: none !important;
-    position: fixed !important;
-    top: 80px !important;
-    right: 20px !important;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 14px;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 1000;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-}
-
-.status-indicator.connected {
-    background: rgba(46, 213, 115, 0.3);
-    border: 2px solid rgba(46, 213, 115, 0.5);
-    color: #2ed573;
-}
-
-.status-indicator.disconnected {
-    background: rgba(255, 71, 87, 0.3);
-    border: 2px solid rgba(255, 71, 87, 0.5);
-    color: #ff4757;
-    cursor: pointer;
-}
-
-.status-indicator.disconnected:hover {
-    background: rgba(255, 71, 87, 0.4);
-    transform: scale(1.05);
-}
-
-.firebase-warning {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    max-width: 350px;
-    padding: 15px 20px;
-    border-radius: 12px;
-    background: rgba(255, 193, 7, 0.2);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 193, 7, 0.4);
-    color: #ffc107;
-    font-size: 13px;
-    z-index: 999;
-    box-shadow: var(--shadow-md);
-    animation: slideIn 0.3s ease-out;
-}
-
-.firebase-warning strong {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.firebase-warning a {
-    color: #ffc107;
-    text-decoration: underline;
-}
-
-.status-indicator.syncing {
-    background: rgba(255, 193, 7, 0.3);
-    border: 2px solid rgba(255, 193, 7, 0.5);
-    color: #ffc107;
-}
-
-.status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-.status-indicator.connected .status-dot {
-    background: #2ed573;
-}
-
-.status-indicator.disconnected .status-dot {
-    background: #ff4757;
-}
-
-.status-indicator.syncing .status-dot {
-    background: #ffc107;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(0.8);
-    }
-}
-
-.realtime-notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 12px;
-    background: rgba(46, 213, 115, 0.2);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(46, 213, 115, 0.4);
-    color: #2ed573;
-    font-weight: 600;
-    font-size: 14px;
-    z-index: 1000;
-    animation: slideIn 0.3s ease-out;
-    box-shadow: var(--shadow-md);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@media (max-width: 1200px) {
-    #teamsContainer {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 900px) {
-    #teamsContainer {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .axie-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 6px;
-    }
-    
-    .team-card {
-        padding: 12px;
-    }
-}
-
-@media (max-width: 700px) {
-    h1 {
-        font-size: 1.8rem;
-        margin-bottom: 20px;
-    }
-    
-    .axie-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-    }
-    
-    .axie-container {
-        padding: 4px;
-    }
-    
-    .axie-container .axie-image-wrapper {
-        padding: 2px;
-        border-radius: 10px 10px 0 0;
-    }
-    
-    .axie-container .axie-image-wrapper img {
-        object-fit: cover;
-        object-position: center center;
-        transform: scale(1.4);
-        padding: 0;
-    }
-    
-    .axie-container .axie-id-label {
-        font-size: 10px;
-        padding: 3px 4px;
-        min-height: 18px;
-    }
-    
-    .axie-container.picked::after {
-        top: 4px;
-        left: 4px;
-        right: auto;
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
-        box-shadow: 0 1px 5px rgba(46, 213, 115, 0.5);
-    }
-    
-    .axie-delete {
-        width: 20px;
-        height: 20px;
-        font-size: 14px;
-        top: 2px;
-        right: 2px;
-        border-width: 1.5px;
-    }
-    
-    .team-name {
-        font-size: 15px;
-    }
-    
-    .team-card {
-        padding: 10px;
-    }
-    
-    .add-team {
-        margin-bottom: 20px;
-        gap: 8px;
-    }
-    
-    .add-team input[type="text"] {
-        width: 100%;
-        max-width: 200px;
-        padding: 8px 12px;
-        font-size: 12px;
-        border-radius: 8px;
-    }
-    
-    .add-team button {
-        padding: 8px 16px;
-        font-size: 12px;
-        border-radius: 8px;
-        letter-spacing: 0.2px;
-    }
-    
-    .theme-toggle {
-        display: none !important;
-    }
-}
-
-@media (max-width: 500px) {
-    .axie-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-    }
-    
-    .axie-container {
-        padding: 3px;
-    }
-    
-    .axie-container .axie-image-wrapper {
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .axie-container .axie-image-wrapper img {
-        border-radius: 6px;
-        padding: 0;
-        object-fit: cover;
-        object-position: center center;
-        transform: scale(1.4);
-    }
-    
-    .axie-container .axie-id-label {
-        font-size: 9px;
-        padding: 2px 3px;
-        min-height: 16px;
-    }
-    
-    .axie-container.picked::after {
-        top: 3px;
-        left: 3px;
-        right: auto;
-        width: 16px;
-        height: 16px;
-        font-size: 11px;
-        box-shadow: 0 1px 4px rgba(46, 213, 115, 0.5);
-    }
-    
-    .axie-delete {
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
-        top: 1px;
-        right: 1px;
-        border-width: 1px;
-        padding: 0;
-    }
-    
-    .axie-delete:hover {
-        transform: scale(1.1) rotate(90deg);
-    }
-    
-    .team-card {
-        padding: 8px;
-        margin-bottom: 12px;
-        margin-left: 0;
-        margin-right: 0;
-    }
-    
-    .team-name {
-        font-size: 14px;
-        width: 100%;
-        margin-bottom: 4px;
-        min-width: 0;
-    }
-    
-    .team-header {
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-    
-    .team-header .team-buttons {
-        display: flex;
-        flex-wrap: nowrap;
-        width: auto;
-        min-width: 0;
-        justify-content: flex-start;
-        gap: 4px;
-    }
-    
-    .team-header .team-buttons button {
-        flex-shrink: 0;
-        white-space: nowrap;
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-    
-    .add-axie input {
-        width: 100%;
-        max-width: 140px;
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-    
-    .add-axie button {
-        padding: 8px 12px;
-        font-size: 12px;
-    }
-    
-    .add-axie .copy-ids-btn {
-        padding: 8px 10px;
-        font-size: 11px;
-    }
-    
-    .status-indicator {
-        display: none !important;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 15px;
-    }
-    
-    .add-team {
-        margin-bottom: 15px;
-        gap: 6px;
-    }
-    
-    .add-team input[type="text"] {
-        max-width: 160px;
-        padding: 7px 10px;
-        font-size: 11px;
-    }
-    
-    .add-team button {
-        padding: 7px 14px;
-        font-size: 11px;
-    }
-    
-    .theme-toggle {
-        display: none !important;
-    }
-    
-    .axie-container {
-        transform: none !important;
-        -webkit-transform: none !important;
-    }
-    
-    .axie-container:active,
-    .axie-container:focus,
-    .axie-container:active:focus {
-        transform: none !important;
-        -webkit-transform: none !important;
-    }
-    
-    .axie-container .axie-image-wrapper img {
-        transform: scale(1.4) !important;
-        -webkit-transform: scale(1.4) !important;
-        will-change: auto;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.3, user-scalable=yes">
+    <title>Axie Teams Manager</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/LDM0FH3M/favicon.png">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/LDM0FH3M/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Modern Palette - Dark Mode (Default) */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-hover: rgba(51, 65, 85, 0.8);
+            --bg-input: rgba(15, 23, 42, 0.6);
+            --bg-input-focus: rgba(15, 23, 42, 0.8);
+            --bg-axie-container: rgba(51, 65, 85, 0.4);
+
+            /* Gradients & Accents */
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --primary-gradient-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --accent-color: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.5);
+
+            /* Text Colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            /* Borders & Shadows */
+            --border-color: rgba(148, 163, 184, 0.1);
+            --border-hover: rgba(148, 163, 184, 0.3);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+
+            /* Status Colors */
+            --status-success: #10b981;
+            --status-error: #ef4444;
+            --status-warning: #f59e0b;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --bg-input: rgba(241, 245, 249, 0.8);
+            --bg-input-focus: #ffffff;
+            --bg-axie-container: rgba(241, 245, 249, 0.6);
+
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+
+            --border-color: rgba(0, 0, 0, 0.05);
+            --border-hover: rgba(0, 0, 0, 0.1);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 25%);
+            background-attachment: fixed;
+        }
+
+        body.login-required .main-content {
+            display: none !important;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.2));
+        }
+
+        /* Inputs & Forms */
+        input[type="text"],
+        input[type="password"] {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            background: var(--bg-input-focus);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        button {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Primary Action Buttons */
+        .add-team button,
+        .login-form button[type="submit"],
+        .add-axie button:not(.copy-ids-btn) {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            /* Pill shape */
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            font-size: 0.95rem;
+        }
+
+        .add-team button:hover,
+        .login-form button[type="submit"]:hover,
+        .add-axie button:not(.copy-ids-btn):hover {
+            background: var(--primary-gradient-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .add-team button:active {
+            transform: translateY(0);
+        }
+
+        /* Secondary/Utility Buttons */
+        .theme-toggle {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Add Team Section */
+        .add-team {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 24px;
+            backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            box-shadow: var(--shadow-lg);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .add-team input {
+            min-width: 250px;
+        }
+
+        /* Teams Grid */
+        #teamsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 30px;
+            padding-bottom: 40px;
+        }
+
+        /* Team Card */
+        .team-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            border: var(--glass-border);
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+
+        /* Team Header */
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .team-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .team-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .team-buttons button {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+
+        .team-buttons button:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .team-buttons button.clear-axies-btn:hover {
+            color: var(--status-warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .team-buttons button:last-child:hover {
+            /* Delete button */
+            color: var(--status-error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Axie Grid */
+        .axie-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .axie-container {
+            background: var(--bg-axie-container);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .axie-container:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        .axie-image-wrapper {
+            flex: 1;
+            min-height: 0;
+            /* Crucial for flex containers */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            overflow: hidden;
+        }
+
+        .axie-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            max-height: 140px;
+            /* Limit image height to leave room for ID */
+        }
+
+        .axie-container:hover .axie-image-wrapper img {
+            transform: scale(1.1);
+        }
+
+        .axie-id-label {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 8px 0;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+            /* Prevent shrinking */
+            z-index: 2;
+            position: relative;
+            width: 100%;
+            min-height: 32px;
+            /* Ensure minimum height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Axie Status States */
+        .axie-container.picked {
+            border-color: var(--status-success);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        .axie-container.picked::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--status-success);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .axie-container.banned {
+            border-color: var(--status-error);
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .axie-container.banned::after {
+            content: '✕';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            color: var(--status-error);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Add Axie Footer */
+        .add-axie {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .add-axie input {
+            flex: 1;
+            min-width: 120px;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+
+        .add-axie button {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .add-axie .copy-ids-btn {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+        }
+
+        .add-axie .copy-ids-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: var(--bg-card);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 400px;
+            /* Restore original-ish width but responsive */
+            position: relative;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-container h2 {
+            font-size: 2rem;
+            margin-bottom: 32px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-form {
+            gap: 24px;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none !important;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .status-indicator.connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--status-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-indicator.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--status-error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            #teamsContainer {
+                grid-template-columns: 1fr;
+            }
+
+            .team-card {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .add-team {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .add-team input {
+                width: 100%;
+            }
+
+            .add-team button {
+                width: 100%;
+            }
+
+            .axie-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .axie-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .team-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .team-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .team-buttons button {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
-<body>
 
-<div class="login-overlay" id="loginOverlay">
-    <div class="login-container">
-        <h2>🔐 Iniciar Sesión</h2>
-        <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
-            <div class="login-error" id="loginError">
-                ⚠️ Usuario o contraseña incorrectos
-            </div>
-            <input 
-                type="text" 
-                id="usernameInput" 
-                placeholder="Usuario" 
-                required
-                autocomplete="username"
-            >
-            <input 
-                type="password" 
-                id="passwordInput" 
-                placeholder="Contraseña" 
-                required
-                autocomplete="current-password"
-            >
-            <label class="remember-me">
-                <input type="checkbox" id="rememberMe">
-                <span>Recordar contraseña</span>
-            </label>
-            <button type="submit">Ingresar</button>
-        </form>
+<body class="login-required">
+
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-container">
+            <h2>🔐 Iniciar Sesión</h2>
+            <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="login-error" id="loginError">
+                    ⚠️ Usuario o contraseña incorrectos
+                </div>
+                <input type="text" id="usernameInput" placeholder="Usuario" required autocomplete="username">
+                <input type="password" id="passwordInput" placeholder="Contraseña" required
+                    autocomplete="current-password">
+                <label class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <span>Recordar contraseña</span>
+                </label>
+                <button type="submit">Ingresar</button>
+            </form>
+        </div>
     </div>
-</div>
 
-<div class="main-content">
-<h1>⚔️ Axie Teams Manager</h1>
+    <div class="main-content">
+        <h1>⚔️ Axie Teams Manager</h1>
 
-<div id="statusIndicator" class="status-indicator disconnected">
-    <span class="status-dot"></span>
-    <span id="statusText">Desconectado</span>
-</div>
+        <div id="statusIndicator" class="status-indicator disconnected">
+            <span class="status-dot"></span>
+            <span id="statusText">Desconectado</span>
+        </div>
 
-<div class="add-team">
-    <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
-    <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
-    <button onclick="addTeam()">➕ Agregar equipo</button>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
-        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
-        <span id="themeText">Modo Oscuro</span>
-    </button>
-</div>
+        <div class="add-team">
+            <input type="text" id="teamNameInput" placeholder="Nombre del equipo">
+            <input type="text" id="axieIdsInput" placeholder="IDs separados por coma">
+            <button onclick="addTeam()">➕ Agregar equipo</button>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+                <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+                <span id="themeText">Modo Oscuro</span>
+            </button>
+        </div>
 
-<div id="teamsContainer"></div>
-</div>
+        <div id="teamsContainer"></div>
+    </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-<script>
-// Bloquear clic derecho y herramientas de desarrollador
-document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-});
-
-document.addEventListener('keydown', function(e) {
-    // Bloquear F12
-    if (e.key === 'F12') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+Shift+I (Inspeccionar)
-    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+Shift+J (Consola)
-    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+Shift+C (Selector de elementos)
-    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+U (Ver código fuente)
-    if (e.ctrlKey && e.key === 'U') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+S (Guardar página)
-    if (e.ctrlKey && e.key === 'S') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+P (Imprimir)
-    if (e.ctrlKey && e.key === 'P') {
-        e.preventDefault();
-        return false;
-    }
-    // Bloquear Ctrl+Shift+K (Consola en Firefox)
-    if (e.ctrlKey && e.shiftKey && e.key === 'K') {
-        e.preventDefault();
-        return false;
-    }
-});
-
-// Bloquear selección de texto (opcional, pero puede ayudar)
-document.addEventListener('selectstart', function(e) {
-    e.preventDefault();
-    return false;
-});
-
-// Bloquear arrastrar y soltar
-document.addEventListener('dragstart', function(e) {
-    e.preventDefault();
-    return false;
-});
-
-function hashPassword(str) {
-    let hash = 0;
-    if (str.length === 0) return hash.toString();
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36) + str.length.toString(36);
-}
-
-const _0x1a2b = ['enfermo', 'mental'];
-const _0x3c4d = btoa('admin').split('').reverse().join('');
-const AUTH_DATA = {
-    u: _0x3c4d,
-    p: hashPassword(_0x1a2b[0] + _0x1a2b[1])
-};
-
-function decodeUsername(encoded) {
-    try {
-        return atob(encoded.split('').reverse().join(''));
-    } catch {
-        return '';
-    }
-}
-
-const LOGIN_CREDENTIALS = {
-    username: decodeUsername(AUTH_DATA.u),
-    passwordHash: AUTH_DATA.p
-};
-
-function checkLogin() {
-    const remembered = localStorage.getItem('rememberLogin');
-    const savedUsername = localStorage.getItem('savedUsername');
-    const savedPassword = localStorage.getItem('savedPassword');
-    
-    if (remembered === 'true' && savedUsername && savedPassword) {
-        const usernameMatch = savedUsername === LOGIN_CREDENTIALS.username;
-        const passwordMatch = hashPassword(savedPassword) === LOGIN_CREDENTIALS.passwordHash;
-        
-        if (usernameMatch && passwordMatch) {
-            showMainContent();
-            return true;
-        } else {
-            localStorage.removeItem('rememberLogin');
-            localStorage.removeItem('savedUsername');
-            localStorage.removeItem('savedPassword');
-        }
-    }
-    
-    showLogin();
-    return false;
-}
-
-function showLogin() {
-    document.body.classList.add('login-required');
-    const overlay = document.getElementById('loginOverlay');
-    if (overlay) {
-        overlay.classList.remove('hidden');
-    }
-    
-    const remembered = localStorage.getItem('rememberLogin');
-    if (remembered === 'true') {
-        const savedUsername = localStorage.getItem('savedUsername');
-        const savedPassword = localStorage.getItem('savedPassword');
-        if (savedUsername) {
-            document.getElementById('usernameInput').value = savedUsername;
-        }
-        if (savedPassword) {
-            document.getElementById('passwordInput').value = savedPassword;
-        }
-        document.getElementById('rememberMe').checked = true;
-    }
-    
-    document.getElementById('usernameInput').focus();
-}
-
-function showMainContent() {
-    document.body.classList.remove('login-required');
-    const overlay = document.getElementById('loginOverlay');
-    if (overlay) {
-        overlay.classList.add('hidden');
-    }
-    
-    function initializeContent() {
-        const teamsContainer = document.getElementById('teamsContainer');
-        if (!teamsContainer) {
-            console.warn('⚠️ teamsContainer no encontrado, reintentando...');
-            setTimeout(initializeContent, 100);
-            return;
-        }
-        
-        if (typeof loadTeams === 'function') {
-            console.log('🔄 Cargando equipos...');
-            loadTeams();
-        } else {
-            console.warn('⚠️ loadTeams no está definida, reintentando...');
-            setTimeout(initializeContent, 100);
-            return;
-        }
-    }
-    
-    setTimeout(initializeContent, 150);
-}
-
-function handleLogin(event) {
-    event.preventDefault();
-    
-    const username = document.getElementById('usernameInput').value.trim();
-    const password = document.getElementById('passwordInput').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-    const errorDiv = document.getElementById('loginError');
-    
-    const usernameMatch = username === LOGIN_CREDENTIALS.username;
-    const passwordMatch = hashPassword(password) === LOGIN_CREDENTIALS.passwordHash;
-    
-    if (usernameMatch && passwordMatch) {
-        if (rememberMe) {
-            localStorage.setItem('rememberLogin', 'true');
-            localStorage.setItem('savedUsername', username);
-            localStorage.setItem('savedPassword', password);
-        } else {
-            localStorage.removeItem('rememberLogin');
-            localStorage.removeItem('savedUsername');
-            localStorage.removeItem('savedPassword');
-        }
-        
-        errorDiv.classList.remove('show');
-        showMainContent();
-    } else {
-        errorDiv.classList.add('show');
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('passwordInput').focus();
-        
-        setTimeout(() => {
-            errorDiv.classList.remove('show');
-        }, 3000);
-    }
-}
-
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeUI(savedTheme);
-}
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeUI(newTheme);
-}
-
-function updateThemeUI(theme) {
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-    
-    if (themeIcon && themeText) {
-        if (theme === 'light') {
-            themeIcon.textContent = '☀️';
-            themeText.textContent = 'Modo Claro';
-        } else {
-            themeIcon.textContent = '🌙';
-            themeText.textContent = 'Modo Oscuro';
-        }
-    }
-}
-
-initTheme();
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCLU9XKBuiZ6QyWRoy1hgN-AG_lYkKDNaA",
-    authDomain: "axie-teams-manager.firebaseapp.com",
-    databaseURL: "https://axie-teams-manager-default-rtdb.firebaseio.com",
-    projectId: "axie-teams-manager",
-    storageBucket: "axie-teams-manager.firebasestorage.app",
-    messagingSenderId: "90838655104",
-    appId: "1:90838655104:web:ba7444a58661f8330b8665"
-};
-
-let db = null;
-let isFirebaseConfigured = false;
-let isSyncing = false;
-let realtimeListener = null;
-let lastSaveTime = 0;
-let pendingSave = false;
-let saveQueue = []; // Cola para asegurar que los cambios se guarden en orden
-let isSaving = false; // Flag para saber si estamos guardando actualmente
-
-function isFirebaseConfigValid() {
-    return firebaseConfig.apiKey && 
-           firebaseConfig.apiKey !== "TU_API_KEY" &&
-           firebaseConfig.apiKey.length > 10 &&
-           firebaseConfig.projectId && 
-           firebaseConfig.projectId !== "TU_PROJECT_ID" &&
-           firebaseConfig.databaseURL && 
-           firebaseConfig.databaseURL.includes('firebaseio.com');
-}
-
-try {
-    if (isFirebaseConfigValid()) {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-        isFirebaseConfigured = true;
-        updateConnectionStatus('connected');
-        console.log('✅ Firebase conectado correctamente');
-        console.log('🔄 Sincronización en tiempo real activada');
-    } else {
-        console.warn('⚠️ Firebase no configurado correctamente.');
-        console.warn('📖 Lee GUIA_FIREBASE.md para instrucciones completas');
-        console.warn('💾 Usando modo local (localStorage)');
-        updateConnectionStatus('disconnected');
-        showFirebaseWarning();
-    }
-} catch (error) {
-    console.error('❌ Error al inicializar Firebase:', error);
-    console.error('💡 Verifica que:');
-    console.error('   1. Todas las credenciales estén correctamente copiadas');
-    console.error('   2. Las comillas " estén alrededor de cada valor');
-    console.error('   3. La Realtime Database esté creada en Firebase');
-    console.error('   4. Las reglas de seguridad permitan lectura/escritura');
-    updateConnectionStatus('disconnected');
-    showFirebaseWarning();
-}
-
-let teamCount = 0;
-const DB_PATH = 'axieTeams';
-
-function testFirebaseConnection() {
-    if (!isFirebaseConfigured || !db) {
-        console.error('❌ Firebase no está configurado');
-        return;
-    }
-    
-    console.log('🧪 Probando conexión con Firebase...');
-    db.ref(DB_PATH).once('value')
-        .then((snapshot) => {
-            console.log('✅ Conexión exitosa!');
-            console.log('📊 Datos actuales:', snapshot.val());
-        })
-        .catch((error) => {
-            console.error('❌ Error de conexión:', error);
-            console.error('💡 Verifica las reglas de seguridad en Firebase Console');
+    <script>
+        // Bloquear clic derecho y herramientas de desarrollador
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            return false;
         });
-}
 
-window.testFirebase = testFirebaseConnection;
+        document.addEventListener('keydown', function (e) {
+            // Bloquear F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+Shift+I (Inspeccionar)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+Shift+J (Consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+Shift+C (Selector de elementos)
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+U (Ver código fuente)
+            if (e.ctrlKey && e.key === 'U') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+S (Guardar página)
+            if (e.ctrlKey && e.key === 'S') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+P (Imprimir)
+            if (e.ctrlKey && e.key === 'P') {
+                e.preventDefault();
+                return false;
+            }
+            // Bloquear Ctrl+Shift+K (Consola en Firefox)
+            if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+                e.preventDefault();
+                return false;
+            }
+        });
 
-function updateConnectionStatus(status) {
-    const indicator = document.getElementById('statusIndicator');
-    const statusText = document.getElementById('statusText');
-    
-    indicator.className = `status-indicator ${status}`;
-    
-    switch(status) {
-        case 'connected':
-            statusText.textContent = '🟢 Conectado';
-            break;
-        case 'disconnected':
-            statusText.textContent = '🔴 Modo Local';
-            break;
-        case 'syncing':
-            statusText.textContent = '🟡 Sincronizando...';
-            break;
-    }
-}
+        // Bloquear selección de texto (opcional, pero puede ayudar)
+        document.addEventListener('selectstart', function (e) {
+            e.preventDefault();
+            return false;
+        });
 
-function showFirebaseWarning() {
-    if (document.getElementById('firebaseWarning')) return;
-    
-    const warning = document.createElement('div');
-    warning.id = 'firebaseWarning';
-    warning.className = 'firebase-warning';
-    warning.innerHTML = `
+        // Bloquear arrastrar y soltar
+        document.addEventListener('dragstart', function (e) {
+            e.preventDefault();
+            return false;
+        });
+
+        function hashPassword(str) {
+            let hash = 0;
+            if (str.length === 0) return hash.toString();
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(36) + str.length.toString(36);
+        }
+
+        const _0x1a2b = ['enfermo', 'mental'];
+        const _0x3c4d = btoa('admin').split('').reverse().join('');
+        const AUTH_DATA = {
+            u: _0x3c4d,
+            p: hashPassword(_0x1a2b[0] + _0x1a2b[1])
+        };
+
+        function decodeUsername(encoded) {
+            try {
+                return atob(encoded.split('').reverse().join(''));
+            } catch {
+                return '';
+            }
+        }
+
+        const LOGIN_CREDENTIALS = {
+            username: decodeUsername(AUTH_DATA.u),
+            passwordHash: AUTH_DATA.p
+        };
+
+        function checkLogin() {
+            const remembered = localStorage.getItem('rememberLogin');
+            const savedUsername = localStorage.getItem('savedUsername');
+            const savedPassword = localStorage.getItem('savedPassword');
+
+            if (remembered === 'true' && savedUsername && savedPassword) {
+                const usernameMatch = savedUsername === LOGIN_CREDENTIALS.username;
+                const passwordMatch = hashPassword(savedPassword) === LOGIN_CREDENTIALS.passwordHash;
+
+                if (usernameMatch && passwordMatch) {
+                    showMainContent();
+                    return true;
+                } else {
+                    localStorage.removeItem('rememberLogin');
+                    localStorage.removeItem('savedUsername');
+                    localStorage.removeItem('savedPassword');
+                }
+            }
+
+            showLogin();
+            return false;
+        }
+
+        function showLogin() {
+            document.body.classList.add('login-required');
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+
+            const remembered = localStorage.getItem('rememberLogin');
+            if (remembered === 'true') {
+                const savedUsername = localStorage.getItem('savedUsername');
+                const savedPassword = localStorage.getItem('savedPassword');
+                if (savedUsername) {
+                    document.getElementById('usernameInput').value = savedUsername;
+                }
+                if (savedPassword) {
+                    document.getElementById('passwordInput').value = savedPassword;
+                }
+                document.getElementById('rememberMe').checked = true;
+            }
+
+            document.getElementById('usernameInput').focus();
+        }
+
+        function showMainContent() {
+            document.body.classList.remove('login-required');
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+
+            function initializeContent() {
+                const teamsContainer = document.getElementById('teamsContainer');
+                if (!teamsContainer) {
+                    console.warn('⚠️ teamsContainer no encontrado, reintentando...');
+                    setTimeout(initializeContent, 100);
+                    return;
+                }
+
+                if (typeof loadTeams === 'function') {
+                    console.log('🔄 Cargando equipos...');
+                    loadTeams();
+                } else {
+                    console.warn('⚠️ loadTeams no está definida, reintentando...');
+                    setTimeout(initializeContent, 100);
+                    return;
+                }
+            }
+
+            setTimeout(initializeContent, 150);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorDiv = document.getElementById('loginError');
+
+            const usernameMatch = username === LOGIN_CREDENTIALS.username;
+            const passwordMatch = hashPassword(password) === LOGIN_CREDENTIALS.passwordHash;
+
+            if (usernameMatch && passwordMatch) {
+                if (rememberMe) {
+                    localStorage.setItem('rememberLogin', 'true');
+                    localStorage.setItem('savedUsername', username);
+                    localStorage.setItem('savedPassword', password);
+                } else {
+                    localStorage.removeItem('rememberLogin');
+                    localStorage.removeItem('savedUsername');
+                    localStorage.removeItem('savedPassword');
+                }
+
+                errorDiv.classList.remove('show');
+                showMainContent();
+            } else {
+                errorDiv.classList.add('show');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+
+                setTimeout(() => {
+                    errorDiv.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeUI(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeUI(newTheme);
+        }
+
+        function updateThemeUI(theme) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            if (themeIcon && themeText) {
+                if (theme === 'light') {
+                    themeIcon.textContent = '☀️';
+                    themeText.textContent = 'Modo Claro';
+                } else {
+                    themeIcon.textContent = '🌙';
+                    themeText.textContent = 'Modo Oscuro';
+                }
+            }
+        }
+
+        initTheme();
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLU9XKBuiZ6QyWRoy1hgN-AG_lYkKDNaA",
+            authDomain: "axie-teams-manager.firebaseapp.com",
+            databaseURL: "https://axie-teams-manager-default-rtdb.firebaseio.com",
+            projectId: "axie-teams-manager",
+            storageBucket: "axie-teams-manager.firebasestorage.app",
+            messagingSenderId: "90838655104",
+            appId: "1:90838655104:web:ba7444a58661f8330b8665"
+        };
+
+        let db = null;
+        let isFirebaseConfigured = false;
+        let isSyncing = false;
+        let realtimeListener = null;
+        let lastSaveTime = 0;
+        let pendingSave = false;
+        let saveQueue = []; // Cola para asegurar que los cambios se guarden en orden
+        let isSaving = false; // Flag para saber si estamos guardando actualmente
+
+        function isFirebaseConfigValid() {
+            return firebaseConfig.apiKey &&
+                firebaseConfig.apiKey !== "TU_API_KEY" &&
+                firebaseConfig.apiKey.length > 10 &&
+                firebaseConfig.projectId &&
+                firebaseConfig.projectId !== "TU_PROJECT_ID" &&
+                firebaseConfig.databaseURL &&
+                firebaseConfig.databaseURL.includes('firebaseio.com');
+        }
+
+        try {
+            if (isFirebaseConfigValid()) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                isFirebaseConfigured = true;
+                updateConnectionStatus('connected');
+                console.log('✅ Firebase conectado correctamente');
+                console.log('🔄 Sincronización en tiempo real activada');
+            } else {
+                console.warn('⚠️ Firebase no configurado correctamente.');
+                console.warn('📖 Lee GUIA_FIREBASE.md para instrucciones completas');
+                console.warn('💾 Usando modo local (localStorage)');
+                updateConnectionStatus('disconnected');
+                showFirebaseWarning();
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar Firebase:', error);
+            console.error('💡 Verifica que:');
+            console.error('   1. Todas las credenciales estén correctamente copiadas');
+            console.error('   2. Las comillas " estén alrededor de cada valor');
+            console.error('   3. La Realtime Database esté creada en Firebase');
+            console.error('   4. Las reglas de seguridad permitan lectura/escritura');
+            updateConnectionStatus('disconnected');
+            showFirebaseWarning();
+        }
+
+        let teamCount = 0;
+        const DB_PATH = 'axieTeams';
+
+        function testFirebaseConnection() {
+            if (!isFirebaseConfigured || !db) {
+                console.error('❌ Firebase no está configurado');
+                return;
+            }
+
+            console.log('🧪 Probando conexión con Firebase...');
+            db.ref(DB_PATH).once('value')
+                .then((snapshot) => {
+                    console.log('✅ Conexión exitosa!');
+                    console.log('📊 Datos actuales:', snapshot.val());
+                })
+                .catch((error) => {
+                    console.error('❌ Error de conexión:', error);
+                    console.error('💡 Verifica las reglas de seguridad en Firebase Console');
+                });
+        }
+
+        window.testFirebase = testFirebaseConnection;
+
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            indicator.className = `status-indicator ${status}`;
+
+            switch (status) {
+                case 'connected':
+                    statusText.textContent = '🟢 Conectado';
+                    break;
+                case 'disconnected':
+                    statusText.textContent = '🔴 Modo Local';
+                    break;
+                case 'syncing':
+                    statusText.textContent = '🟡 Sincronizando...';
+                    break;
+            }
+        }
+
+        function showFirebaseWarning() {
+            if (document.getElementById('firebaseWarning')) return;
+
+            const warning = document.createElement('div');
+            warning.id = 'firebaseWarning';
+            warning.className = 'firebase-warning';
+            warning.innerHTML = `
         <strong>⚠️ Firebase no configurado</strong>
         Estás en modo local. Para habilitar sincronización en tiempo real:
         <br><br>
@@ -1538,1141 +978,1142 @@ function showFirebaseWarning() {
         <br><br>
         <a href="https://console.firebase.google.com/" target="_blank">🔗 Ir a Firebase Console</a>
     `;
-    document.body.appendChild(warning);
-    
-    setTimeout(() => {
-        warning.style.cursor = 'pointer';
-        warning.onclick = () => warning.remove();
-    }, 2000);
-}
+            document.body.appendChild(warning);
 
-function showRealtimeNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'realtime-notification';
-    notification.textContent = `🔄 ${message}`;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideIn 0.3s ease-out reverse';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
+            setTimeout(() => {
+                warning.style.cursor = 'pointer';
+                warning.onclick = () => warning.remove();
+            }, 2000);
+        }
 
-function getTeamsData() {
-    const teams = [];
-    const container = document.getElementById('teamsContainer');
-    if (!container) return teams;
-    
-    const teamCards = Array.from(container.children).filter(child => child.classList.contains('team-card'));
-    
-    teamCards.forEach(teamDiv => {
-        const teamId = teamDiv.dataset.teamId;
-        const nameElement = teamDiv.querySelector('.team-name');
-        if (!nameElement) return;
-        
-        const name = nameElement.innerText || nameElement.textContent || '';
-        const axies = [];
-        const axieContainers = teamDiv.querySelectorAll('.axie-container');
-        axieContainers.forEach(axieDiv => {
-            const id = axieDiv.dataset.axieId;
-            if (!id) return;
-            let status = '';
-            if(axieDiv.classList.contains('banned')) status = 'banned';
-            else if(axieDiv.classList.contains('picked')) status = 'picked';
-            axies.push({id: String(id), status: status});
-        });
-        teams.push({id: String(teamId), name: name, axies: axies});
-    });
-    return teams;
-}
+        function showRealtimeNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'realtime-notification';
+            notification.textContent = `🔄 ${message}`;
+            document.body.appendChild(notification);
 
-function saveTeams(immediate = false) {
-    // No guardar si estamos sincronizando desde Firebase (a menos que sea inmediato)
-    if (isSyncing && !immediate) {
-        // Agregar a la cola para guardar después
-        saveQueue.push({ immediate: false, timestamp: Date.now() });
-        return;
-    }
-    
-    // Si ya estamos guardando, agregar a la cola
-    if (isSaving) {
-        saveQueue.push({ immediate: immediate, timestamp: Date.now() });
-        return;
-    }
-    
-    // Leer el estado actual del DOM (más reciente)
-    const teams = getTeamsData();
-    const now = Date.now();
-    
-    localStorage.setItem('axieTeams', JSON.stringify(teams));
-    
-    if (isFirebaseConfigured && db) {
-        lastSaveTime = now;
-        pendingSave = true;
-        isSaving = true;
-        
-        clearTimeout(window.saveTimeout);
-        
-        const saveToFirebase = () => {
-            // Leer el estado MÁS RECIENTE del DOM antes de guardar
-            const currentTeams = getTeamsData();
-            
-            // Verificar nuevamente antes de guardar
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function getTeamsData() {
+            const teams = [];
+            const container = document.getElementById('teamsContainer');
+            if (!container) return teams;
+
+            const teamCards = Array.from(container.children).filter(child => child.classList.contains('team-card'));
+
+            teamCards.forEach(teamDiv => {
+                const teamId = teamDiv.dataset.teamId;
+                const nameElement = teamDiv.querySelector('.team-name');
+                if (!nameElement) return;
+
+                const name = nameElement.innerText || nameElement.textContent || '';
+                const axies = [];
+                const axieContainers = teamDiv.querySelectorAll('.axie-container');
+                axieContainers.forEach(axieDiv => {
+                    const id = axieDiv.dataset.axieId;
+                    if (!id) return;
+                    let status = '';
+                    if (axieDiv.classList.contains('banned')) status = 'banned';
+                    else if (axieDiv.classList.contains('picked')) status = 'picked';
+                    axies.push({ id: String(id), status: status });
+                });
+                teams.push({ id: String(teamId), name: name, axies: axies });
+            });
+            return teams;
+        }
+
+        function saveTeams(immediate = false) {
+            // No guardar si estamos sincronizando desde Firebase (a menos que sea inmediato)
             if (isSyncing && !immediate) {
-                isSaving = false;
-                processSaveQueue();
+                // Agregar a la cola para guardar después
+                saveQueue.push({ immediate: false, timestamp: Date.now() });
                 return;
             }
-            
-            pendingSave = false;
-            isSyncing = true;
-            updateConnectionStatus('syncing');
-            
-            db.ref(DB_PATH).set(currentTeams)
-                .then(() => {
-                    lastSaveTime = Date.now();
-                    // Reducir el tiempo de espera para permitir actualizaciones más rápidas
-                    setTimeout(() => {
-                        isSyncing = false;
+
+            // Si ya estamos guardando, agregar a la cola
+            if (isSaving) {
+                saveQueue.push({ immediate: immediate, timestamp: Date.now() });
+                return;
+            }
+
+            // Leer el estado actual del DOM (más reciente)
+            const teams = getTeamsData();
+            const now = Date.now();
+
+            localStorage.setItem('axieTeams', JSON.stringify(teams));
+
+            if (isFirebaseConfigured && db) {
+                lastSaveTime = now;
+                pendingSave = true;
+                isSaving = true;
+
+                clearTimeout(window.saveTimeout);
+
+                const saveToFirebase = () => {
+                    // Leer el estado MÁS RECIENTE del DOM antes de guardar
+                    const currentTeams = getTeamsData();
+
+                    // Verificar nuevamente antes de guardar
+                    if (isSyncing && !immediate) {
                         isSaving = false;
-                        updateConnectionStatus('connected');
-                        // Procesar la cola después de guardar
                         processSaveQueue();
-                    }, 200);
-                })
-                .catch((error) => {
-                    console.error('❌ Error al guardar en Firebase:', error);
-                    isSyncing = false;
-                    isSaving = false;
-                    updateConnectionStatus('connected');
-                    // Procesar la cola incluso si hay error
-                    processSaveQueue();
-                });
-        };
-        
-        if (immediate) {
-            // Para guardados inmediatos, agregar un pequeño delay para asegurar que el DOM esté actualizado
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    saveToFirebase();
-                }, 100);
-            });
-        } else {
-            // Para guardados no inmediatos, usar un delay más largo
-            window.saveTimeout = setTimeout(saveToFirebase, 300);
-        }
-    } else {
-        isSaving = false;
-    }
-}
-
-function processSaveQueue() {
-    if (saveQueue.length === 0 || isSaving || isSyncing) {
-        return;
-    }
-    
-    // Procesar el siguiente elemento de la cola
-    const nextSave = saveQueue.shift();
-    if (nextSave) {
-        // Delay más largo para asegurar que el DOM se actualice completamente
-        // y que cualquier cambio pendiente se refleje antes de guardar
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                saveTeams(nextSave.immediate);
-            }, 200);
-        });
-    }
-}
-
-function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
-    const container = document.getElementById('teamsContainer');
-    const currentTeams = Array.from(container.querySelectorAll('.team-card'));
-    
-    if (currentTeams.length === 0) {
-        renderTeams(newTeams, isRealtimeUpdate);
-        return;
-    }
-    
-    const currentOrder = currentTeams.map(card => card.dataset.teamId);
-    const newOrder = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
-    
-    const orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(newOrder);
-    
-    if (orderChanged && isRealtimeUpdate) {
-        const teamMap = new Map();
-        currentTeams.forEach(teamDiv => {
-            teamMap.set(teamDiv.dataset.teamId, teamDiv);
-        });
-        
-        newOrder.forEach((teamId, index) => {
-            const teamDiv = teamMap.get(teamId);
-            if (teamDiv) {
-                const currentIndex = Array.from(container.children).indexOf(teamDiv);
-                if (currentIndex !== index) {
-                    const targetElement = container.children[index];
-                    if (targetElement) {
-                        container.insertBefore(teamDiv, targetElement);
-                    } else {
-                        container.appendChild(teamDiv);
+                        return;
                     }
-                }
-            }
-        });
-    }
-    
-    newTeams.forEach((newTeam, teamIndex) => {
-        const teamId = String(newTeam.id !== undefined ? newTeam.id : newTeam.name);
-        const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
-        
-        if (!existingTeamDiv) {
-            const teamDiv = createTeamElement(newTeam, teamId);
-            const insertIndex = newOrder.indexOf(teamId);
-            const currentChildren = Array.from(container.children).filter(c => c.classList.contains('team-card'));
-            if (insertIndex >= 0 && insertIndex < currentChildren.length) {
-                container.insertBefore(teamDiv, currentChildren[insertIndex]);
-            } else {
-                container.appendChild(teamDiv);
-            }
-            return;
-        }
-        
-        const nameElement = existingTeamDiv.querySelector('.team-name');
-        if (nameElement) {
-            const currentName = nameElement.innerText || nameElement.textContent || '';
-            const newName = String(newTeam.name || '');
-            if (currentName !== newName) {
-                nameElement.innerText = newName;
-            }
-        }
-        
-        const grid = existingTeamDiv.querySelector('.axie-grid');
-        if (grid) {
-            const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
-            const currentAxieIds = currentAxies.map(axie => String(axie.dataset.axieId || ''));
-            const newAxieIds = (newTeam.axies || []).map(axie => String(axie.id || '')).filter(id => id);
-            
-            // Primero, eliminar axies que ya no están en el nuevo estado
-            currentAxies.forEach(axieDiv => {
-                const axieId = String(axieDiv.dataset.axieId || '');
-                if (!newAxieIds.includes(axieId)) {
-                    axieDiv.remove();
-                }
-            });
-            
-            // Luego, agregar o actualizar axies del nuevo estado
-            // Ordenar los axies nuevos para mantener consistencia
-            const sortedNewAxies = [...(newTeam.axies || [])].sort((a, b) => {
-                const idA = String(a.id || '');
-                const idB = String(b.id || '');
-                return idA.localeCompare(idB);
-            });
-            
-            sortedNewAxies.forEach(axie => {
-                const axieId = String(axie.id || '');
-                if (!axieId) return;
-                
-                const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axieId}"]`);
-                
-                if (!existingAxie) {
-                    // Agregar nuevo axie
-                    addAxieToGrid(axieId, grid, String(axie.status || ''), false);
+
+                    pendingSave = false;
+                    isSyncing = true;
+                    updateConnectionStatus('syncing');
+
+                    db.ref(DB_PATH).set(currentTeams)
+                        .then(() => {
+                            lastSaveTime = Date.now();
+                            // Reducir el tiempo de espera para permitir actualizaciones más rápidas
+                            setTimeout(() => {
+                                isSyncing = false;
+                                isSaving = false;
+                                updateConnectionStatus('connected');
+                                // Procesar la cola después de guardar
+                                processSaveQueue();
+                            }, 200);
+                        })
+                        .catch((error) => {
+                            console.error('❌ Error al guardar en Firebase:', error);
+                            isSyncing = false;
+                            isSaving = false;
+                            updateConnectionStatus('connected');
+                            // Procesar la cola incluso si hay error
+                            processSaveQueue();
+                        });
+                };
+
+                if (immediate) {
+                    // Para guardados inmediatos, agregar un pequeño delay para asegurar que el DOM esté actualizado
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            saveToFirebase();
+                        }, 100);
+                    });
                 } else {
-                    const currentLocalStatus = existingAxie.classList.contains('banned') ? 'banned' : 
-                                              existingAxie.classList.contains('picked') ? 'picked' : '';
-                    const newRemoteStatus = String(axie.status || '');
-                    
-                    if (currentLocalStatus !== newRemoteStatus) {
-                        const lastStatusChange = existingAxie.dataset.lastStatusChange ? parseInt(existingAxie.dataset.lastStatusChange) : 0;
-                        const timeSinceLastChange = Date.now() - lastStatusChange;
-                        const timeSinceLastSave = Date.now() - lastSaveTime;
-                        
-                        // Lógica mejorada para múltiples usuarios:
-                        // 1. Si el cambio local es muy reciente (< 500ms), protegerlo (evitar sobrescritura inmediata)
-                        // 2. Si el cambio local es reciente pero no muy reciente (500ms - 1.5s), 
-                        //    solo actualizar si no estamos sincronizando (evitar conflictos durante guardado)
-                        // 3. Si el cambio local es antiguo (> 1.5s), siempre actualizar (permitir cambios de otros usuarios)
-                        const isVeryRecentChange = timeSinceLastChange < 500;
-                        const isRecentChange = timeSinceLastChange < 1500;
-                        const shouldProtect = isVeryRecentChange || (isRecentChange && isSyncing);
-                        
-                        if (!shouldProtect) {
-                            // Actualizar el estado desde Firebase
-                            existingAxie.classList.remove('banned', 'picked');
-                            if (newRemoteStatus === 'banned') {
-                                existingAxie.classList.add('banned');
-                            } else if (newRemoteStatus === 'picked') {
-                                existingAxie.classList.add('picked');
-                            }
-                            // Actualizar el timestamp para reflejar que aceptamos el cambio remoto
-                            existingAxie.dataset.lastStatusChange = Date.now().toString();
-                        } else {
-                            // Si el cambio local es muy reciente, ignorar la actualización remota
-                            // para evitar que sobrescriba el cambio del usuario actual
-                            // (solo en consola si es muy reciente para debugging)
-                            if (isVeryRecentChange) {
-                                console.log(`🛡️ Protegiendo cambio local muy reciente (< 500ms) para axie ${axieId}`);
+                    // Para guardados no inmediatos, usar un delay más largo
+                    window.saveTimeout = setTimeout(saveToFirebase, 300);
+                }
+            } else {
+                isSaving = false;
+            }
+        }
+
+        function processSaveQueue() {
+            if (saveQueue.length === 0 || isSaving || isSyncing) {
+                return;
+            }
+
+            // Procesar el siguiente elemento de la cola
+            const nextSave = saveQueue.shift();
+            if (nextSave) {
+                // Delay más largo para asegurar que el DOM se actualice completamente
+                // y que cualquier cambio pendiente se refleje antes de guardar
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        saveTeams(nextSave.immediate);
+                    }, 200);
+                });
+            }
+        }
+
+        function updateTeamsIncremental(newTeams, isRealtimeUpdate = false) {
+            const container = document.getElementById('teamsContainer');
+            const currentTeams = Array.from(container.querySelectorAll('.team-card'));
+
+            if (currentTeams.length === 0) {
+                renderTeams(newTeams, isRealtimeUpdate);
+                return;
+            }
+
+            const currentOrder = currentTeams.map(card => card.dataset.teamId);
+            const newOrder = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
+
+            const orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(newOrder);
+
+            if (orderChanged && isRealtimeUpdate) {
+                const teamMap = new Map();
+                currentTeams.forEach(teamDiv => {
+                    teamMap.set(teamDiv.dataset.teamId, teamDiv);
+                });
+
+                newOrder.forEach((teamId, index) => {
+                    const teamDiv = teamMap.get(teamId);
+                    if (teamDiv) {
+                        const currentIndex = Array.from(container.children).indexOf(teamDiv);
+                        if (currentIndex !== index) {
+                            const targetElement = container.children[index];
+                            if (targetElement) {
+                                container.insertBefore(teamDiv, targetElement);
+                            } else {
+                                container.appendChild(teamDiv);
                             }
                         }
                     }
+                });
+            }
+
+            newTeams.forEach((newTeam, teamIndex) => {
+                const teamId = String(newTeam.id !== undefined ? newTeam.id : newTeam.name);
+                const existingTeamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+
+                if (!existingTeamDiv) {
+                    const teamDiv = createTeamElement(newTeam, teamId);
+                    const insertIndex = newOrder.indexOf(teamId);
+                    const currentChildren = Array.from(container.children).filter(c => c.classList.contains('team-card'));
+                    if (insertIndex >= 0 && insertIndex < currentChildren.length) {
+                        container.insertBefore(teamDiv, currentChildren[insertIndex]);
+                    } else {
+                        container.appendChild(teamDiv);
+                    }
+                    return;
+                }
+
+                const nameElement = existingTeamDiv.querySelector('.team-name');
+                if (nameElement) {
+                    const currentName = nameElement.innerText || nameElement.textContent || '';
+                    const newName = String(newTeam.name || '');
+                    if (currentName !== newName) {
+                        nameElement.innerText = newName;
+                    }
+                }
+
+                const grid = existingTeamDiv.querySelector('.axie-grid');
+                if (grid) {
+                    const currentAxies = Array.from(grid.querySelectorAll('.axie-container'));
+                    const currentAxieIds = currentAxies.map(axie => String(axie.dataset.axieId || ''));
+                    const newAxieIds = (newTeam.axies || []).map(axie => String(axie.id || '')).filter(id => id);
+
+                    // Primero, eliminar axies que ya no están en el nuevo estado
+                    currentAxies.forEach(axieDiv => {
+                        const axieId = String(axieDiv.dataset.axieId || '');
+                        if (!newAxieIds.includes(axieId)) {
+                            axieDiv.remove();
+                        }
+                    });
+
+                    // Luego, agregar o actualizar axies del nuevo estado
+                    // Ordenar los axies nuevos para mantener consistencia
+                    const sortedNewAxies = [...(newTeam.axies || [])].sort((a, b) => {
+                        const idA = String(a.id || '');
+                        const idB = String(b.id || '');
+                        return idA.localeCompare(idB);
+                    });
+
+                    sortedNewAxies.forEach(axie => {
+                        const axieId = String(axie.id || '');
+                        if (!axieId) return;
+
+                        const existingAxie = grid.querySelector(`.axie-container[data-axie-id="${axieId}"]`);
+
+                        if (!existingAxie) {
+                            // Agregar nuevo axie
+                            addAxieToGrid(axieId, grid, String(axie.status || ''), false);
+                        } else {
+                            const currentLocalStatus = existingAxie.classList.contains('banned') ? 'banned' :
+                                existingAxie.classList.contains('picked') ? 'picked' : '';
+                            const newRemoteStatus = String(axie.status || '');
+
+                            if (currentLocalStatus !== newRemoteStatus) {
+                                const lastStatusChange = existingAxie.dataset.lastStatusChange ? parseInt(existingAxie.dataset.lastStatusChange) : 0;
+                                const timeSinceLastChange = Date.now() - lastStatusChange;
+                                const timeSinceLastSave = Date.now() - lastSaveTime;
+
+                                // Lógica mejorada para múltiples usuarios:
+                                // 1. Si el cambio local es muy reciente (< 500ms), protegerlo (evitar sobrescritura inmediata)
+                                // 2. Si el cambio local es reciente pero no muy reciente (500ms - 1.5s), 
+                                //    solo actualizar si no estamos sincronizando (evitar conflictos durante guardado)
+                                // 3. Si el cambio local es antiguo (> 1.5s), siempre actualizar (permitir cambios de otros usuarios)
+                                const isVeryRecentChange = timeSinceLastChange < 500;
+                                const isRecentChange = timeSinceLastChange < 1500;
+                                const shouldProtect = isVeryRecentChange || (isRecentChange && isSyncing);
+
+                                if (!shouldProtect) {
+                                    // Actualizar el estado desde Firebase
+                                    existingAxie.classList.remove('banned', 'picked');
+                                    if (newRemoteStatus === 'banned') {
+                                        existingAxie.classList.add('banned');
+                                    } else if (newRemoteStatus === 'picked') {
+                                        existingAxie.classList.add('picked');
+                                    }
+                                    // Actualizar el timestamp para reflejar que aceptamos el cambio remoto
+                                    existingAxie.dataset.lastStatusChange = Date.now().toString();
+                                } else {
+                                    // Si el cambio local es muy reciente, ignorar la actualización remota
+                                    // para evitar que sobrescriba el cambio del usuario actual
+                                    // (solo en consola si es muy reciente para debugging)
+                                    if (isVeryRecentChange) {
+                                        console.log(`🛡️ Protegiendo cambio local muy reciente (< 500ms) para axie ${axieId}`);
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
             });
+
+            const newTeamIds = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
+            currentTeams.forEach(teamDiv => {
+                const teamId = teamDiv.dataset.teamId;
+                if (!newTeamIds.includes(teamId)) {
+                    teamDiv.remove();
+                }
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+            }
         }
-    });
-    
-    const newTeamIds = newTeams.map(t => String(t.id !== undefined ? t.id : t.name));
-    currentTeams.forEach(teamDiv => {
-        const teamId = teamDiv.dataset.teamId;
-        if (!newTeamIds.includes(teamId)) {
-            teamDiv.remove();
-        }
-    });
-    
-    if (container.children.length === 0) {
-        container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
-    }
-}
 
-function createTeamElement(team, teamId) {
-    const teamDiv = document.createElement('div');
-    teamDiv.className = 'team-card';
-    teamDiv.dataset.teamId = teamId;
+        function createTeamElement(team, teamId) {
+            const teamDiv = document.createElement('div');
+            teamDiv.className = 'team-card';
+            teamDiv.dataset.teamId = teamId;
 
-    const header = document.createElement('div');
-    header.className = 'team-header';
-    
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'team-name';
-    nameSpan.textContent = team.name;
-    nameSpan.title = 'Haz doble clic para editar';
-    nameSpan.addEventListener('dblclick', () => editTeamName(teamId));
-    
-    let lastTap = 0;
-    nameSpan.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        if (tapLength < 300 && tapLength > 0) {
-            e.preventDefault();
-            editTeamName(teamId);
-        }
-        lastTap = currentTime;
-    });
-    
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'team-buttons';
-    
-    const moveUpBtn = document.createElement('button');
-    moveUpBtn.innerHTML = '⬆';
-    moveUpBtn.title = 'Mover arriba';
-    moveUpBtn.onclick = () => moverParaArriba(teamId);
-    
-    const moveDownBtn = document.createElement('button');
-    moveDownBtn.innerHTML = '⬇';
-    moveDownBtn.title = 'Mover abajo';
-    moveDownBtn.onclick = () => moverParaAbajo(teamId);
-    
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'clear-axies-btn';
-    clearBtn.innerHTML = '🗑️ Limpiar';
-    clearBtn.onclick = () => clearAllAxies(teamId);
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '🗑️ Eliminar';
-    deleteBtn.onclick = () => deleteTeam(teamId);
-    
-    buttonsContainer.appendChild(moveUpBtn);
-    buttonsContainer.appendChild(moveDownBtn);
-    buttonsContainer.appendChild(clearBtn);
-    buttonsContainer.appendChild(deleteBtn);
-    
-    header.appendChild(nameSpan);
-    header.appendChild(buttonsContainer);
-    header.style.pointerEvents = 'auto';
-    teamDiv.appendChild(header);
+            const header = document.createElement('div');
+            header.className = 'team-header';
 
-    const grid = document.createElement('div');
-    grid.className = 'axie-grid';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'team-name';
+            nameSpan.textContent = team.name;
+            nameSpan.title = 'Haz doble clic para editar';
+            nameSpan.addEventListener('dblclick', () => editTeamName(teamId));
 
-    team.axies.forEach(axie => {
-        if (axie.id) {
-            addAxieToGrid(axie.id, grid, axie.status || '', false);
-        }
-    });
+            let lastTap = 0;
+            nameSpan.addEventListener('touchend', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 300 && tapLength > 0) {
+                    e.preventDefault();
+                    editTeamName(teamId);
+                }
+                lastTap = currentTime;
+            });
 
-    teamDiv.appendChild(grid);
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'team-buttons';
 
-    const addAxieDiv = document.createElement('div');
-    addAxieDiv.className = 'add-axie';
-    addAxieDiv.innerHTML = `
+            const moveUpBtn = document.createElement('button');
+            moveUpBtn.innerHTML = '⬆';
+            moveUpBtn.title = 'Mover arriba';
+            moveUpBtn.onclick = () => moverParaArriba(teamId);
+
+            const moveDownBtn = document.createElement('button');
+            moveDownBtn.innerHTML = '⬇';
+            moveDownBtn.title = 'Mover abajo';
+            moveDownBtn.onclick = () => moverParaAbajo(teamId);
+
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'clear-axies-btn';
+            clearBtn.innerHTML = '🗑️ Limpiar';
+            clearBtn.onclick = () => clearAllAxies(teamId);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '🗑️ Eliminar';
+            deleteBtn.onclick = () => deleteTeam(teamId);
+
+            buttonsContainer.appendChild(moveUpBtn);
+            buttonsContainer.appendChild(moveDownBtn);
+            buttonsContainer.appendChild(clearBtn);
+            buttonsContainer.appendChild(deleteBtn);
+
+            header.appendChild(nameSpan);
+            header.appendChild(buttonsContainer);
+            header.style.pointerEvents = 'auto';
+            teamDiv.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'axie-grid';
+
+            team.axies.forEach(axie => {
+                if (axie.id) {
+                    addAxieToGrid(axie.id, grid, axie.status || '', false);
+                }
+            });
+
+            teamDiv.appendChild(grid);
+
+            const addAxieDiv = document.createElement('div');
+            addAxieDiv.className = 'add-axie';
+            addAxieDiv.innerHTML = `
         <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamId}" onkeypress="if(event.key==='Enter') addAxie(${teamId})">
         <button onclick="addAxie(${teamId})">➕ Agregar Axie(s)</button>
         <button class="copy-ids-btn" onclick="copyAllAxieIds(${teamId})">📋 Copiar todas las IDs</button>
     `;
-    teamDiv.appendChild(addAxieDiv);
-    
-    return teamDiv;
-}
+            teamDiv.appendChild(addAxieDiv);
 
-function moverParaArriba(teamId) {
-    if (isSyncing) return; // No mover si estamos sincronizando
-    
-    const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if (!teamCard) return;
-    
-    const prevTeam = teamCard.previousElementSibling;
-    if (!prevTeam || !prevTeam.classList.contains('team-card')) {
-        return; // Ya está en la parte superior
-    }
-    
-    // Mover el equipo hacia arriba en el DOM
-    teamCard.parentNode.insertBefore(teamCard, prevTeam);
-    
-    // Guardar inmediatamente en Firebase
-    actualizarOrdenEnFirebase();
-}
+            return teamDiv;
+        }
 
-function moverParaAbajo(teamId) {
-    if (isSyncing) return; // No mover si estamos sincronizando
-    
-    const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if (!teamCard) return;
-    
-    const nextTeam = teamCard.nextElementSibling;
-    if (!nextTeam || !nextTeam.classList.contains('team-card')) {
-        return; // Ya está en la parte inferior
-    }
-    
-    // Mover el equipo hacia abajo en el DOM
-    const afterNext = nextTeam.nextElementSibling;
-    if (afterNext) {
-        teamCard.parentNode.insertBefore(teamCard, afterNext);
-    } else {
-        // Si es el último, mover al final
-        teamCard.parentNode.appendChild(teamCard);
-    }
-    
-    // Guardar inmediatamente en Firebase
-    actualizarOrdenEnFirebase();
-}
+        function moverParaArriba(teamId) {
+            if (isSyncing) return; // No mover si estamos sincronizando
 
-function actualizarOrdenEnFirebase() {
-    if (isSyncing) return; // Evitar loop infinito
-    
-    const container = document.getElementById('teamsContainer');
-    if (!container) return;
-    
-    const teams = [];
-    const teamCards = Array.from(container.querySelectorAll('.team-card'));
-    
-    teamCards.forEach((teamCard, index) => {
-        const teamId = teamCard.dataset.teamId;
-        const nameElement = teamCard.querySelector('.team-name');
-        if (!nameElement) return;
-        
-        const name = nameElement.innerText || nameElement.textContent || '';
-        const axies = [];
-        const axieContainers = teamCard.querySelectorAll('.axie-container');
-        axieContainers.forEach(axieDiv => {
-            const id = axieDiv.dataset.axieId;
-            if (!id) return;
-            let status = '';
-            if(axieDiv.classList.contains('banned')) status = 'banned';
-            else if(axieDiv.classList.contains('picked')) status = 'picked';
-            axies.push({id: String(id), status: status});
-        });
-        teams.push({id: String(teamId), name: name, axies: axies});
-    });
-    
-    // Guardar en localStorage
-    localStorage.setItem('axieTeams', JSON.stringify(teams));
-    
-    // Guardar en Firebase si está configurado
-    if (isFirebaseConfigured && db) {
-        isSyncing = true;
-        updateConnectionStatus('syncing');
-        
-        db.ref(DB_PATH).set(teams)
-            .then(() => {
-                lastSaveTime = Date.now();
-                setTimeout(() => {
-                    isSyncing = false;
-                    updateConnectionStatus('connected');
-                }, 200);
-            })
-            .catch((error) => {
-                console.error('❌ Error al guardar orden en Firebase:', error);
-                isSyncing = false;
-                updateConnectionStatus('connected');
+            const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (!teamCard) return;
+
+            const prevTeam = teamCard.previousElementSibling;
+            if (!prevTeam || !prevTeam.classList.contains('team-card')) {
+                return; // Ya está en la parte superior
+            }
+
+            // Mover el equipo hacia arriba en el DOM
+            teamCard.parentNode.insertBefore(teamCard, prevTeam);
+
+            // Guardar inmediatamente en Firebase
+            actualizarOrdenEnFirebase();
+        }
+
+        function moverParaAbajo(teamId) {
+            if (isSyncing) return; // No mover si estamos sincronizando
+
+            const teamCard = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (!teamCard) return;
+
+            const nextTeam = teamCard.nextElementSibling;
+            if (!nextTeam || !nextTeam.classList.contains('team-card')) {
+                return; // Ya está en la parte inferior
+            }
+
+            // Mover el equipo hacia abajo en el DOM
+            const afterNext = nextTeam.nextElementSibling;
+            if (afterNext) {
+                teamCard.parentNode.insertBefore(teamCard, afterNext);
+            } else {
+                // Si es el último, mover al final
+                teamCard.parentNode.appendChild(teamCard);
+            }
+
+            // Guardar inmediatamente en Firebase
+            actualizarOrdenEnFirebase();
+        }
+
+        function actualizarOrdenEnFirebase() {
+            if (isSyncing) return; // Evitar loop infinito
+
+            const container = document.getElementById('teamsContainer');
+            if (!container) return;
+
+            const teams = [];
+            const teamCards = Array.from(container.querySelectorAll('.team-card'));
+
+            teamCards.forEach((teamCard, index) => {
+                const teamId = teamCard.dataset.teamId;
+                const nameElement = teamCard.querySelector('.team-name');
+                if (!nameElement) return;
+
+                const name = nameElement.innerText || nameElement.textContent || '';
+                const axies = [];
+                const axieContainers = teamCard.querySelectorAll('.axie-container');
+                axieContainers.forEach(axieDiv => {
+                    const id = axieDiv.dataset.axieId;
+                    if (!id) return;
+                    let status = '';
+                    if (axieDiv.classList.contains('banned')) status = 'banned';
+                    else if (axieDiv.classList.contains('picked')) status = 'picked';
+                    axies.push({ id: String(id), status: status });
+                });
+                teams.push({ id: String(teamId), name: name, axies: axies });
             });
-    }
-}
 
-function renderTeams(teams, isRealtimeUpdate = false) {
-    const container = document.getElementById('teamsContainer');
-    
-    if (!teams || teams.length === 0) {
-        container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
-        return;
-    }
-    
-    container.innerHTML = '';
-    teamCount = 0;
-    
-    teams.forEach(team => {
-        const currentTeamId = team.id !== undefined ? team.id : teamCount;
-        const teamDiv = createTeamElement(team, currentTeamId);
-        container.appendChild(teamDiv);
-        teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
-    });
-}
+            // Guardar en localStorage
+            localStorage.setItem('axieTeams', JSON.stringify(teams));
 
-function loadTeams() {
-    if (isFirebaseConfigured && db) {
-        updateConnectionStatus('syncing');
-        
-        db.ref(DB_PATH).once('value')
-            .then((snapshot) => {
-                const teams = snapshot.val();
-                if (teams) {
-                    renderTeams(teams);
-                    localStorage.setItem('axieTeams', JSON.stringify(teams));
-                } else {
-                    const saved = localStorage.getItem('axieTeams');
-                    if (saved) {
-                        renderTeams(JSON.parse(saved));
-                    } else {
-                        renderTeams([]);
-                    }
-                }
-                updateConnectionStatus('connected');
-                
-                setupRealtimeListener();
-            })
-            .catch((error) => {
-                console.error('Error al cargar desde Firebase:', error);
+            // Guardar en Firebase si está configurado
+            if (isFirebaseConfigured && db) {
+                isSyncing = true;
+                updateConnectionStatus('syncing');
+
+                db.ref(DB_PATH).set(teams)
+                    .then(() => {
+                        lastSaveTime = Date.now();
+                        setTimeout(() => {
+                            isSyncing = false;
+                            updateConnectionStatus('connected');
+                        }, 200);
+                    })
+                    .catch((error) => {
+                        console.error('❌ Error al guardar orden en Firebase:', error);
+                        isSyncing = false;
+                        updateConnectionStatus('connected');
+                    });
+            }
+        }
+
+        function renderTeams(teams, isRealtimeUpdate = false) {
+            const container = document.getElementById('teamsContainer');
+
+            if (!teams || teams.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            teamCount = 0;
+
+            teams.forEach(team => {
+                const currentTeamId = team.id !== undefined ? team.id : teamCount;
+                const teamDiv = createTeamElement(team, currentTeamId);
+                container.appendChild(teamDiv);
+                teamCount = Math.max(teamCount, parseInt(currentTeamId) + 1);
+            });
+        }
+
+        function loadTeams() {
+            if (isFirebaseConfigured && db) {
+                updateConnectionStatus('syncing');
+
+                db.ref(DB_PATH).once('value')
+                    .then((snapshot) => {
+                        const teams = snapshot.val();
+                        if (teams) {
+                            renderTeams(teams);
+                            localStorage.setItem('axieTeams', JSON.stringify(teams));
+                        } else {
+                            const saved = localStorage.getItem('axieTeams');
+                            if (saved) {
+                                renderTeams(JSON.parse(saved));
+                            } else {
+                                renderTeams([]);
+                            }
+                        }
+                        updateConnectionStatus('connected');
+
+                        setupRealtimeListener();
+                    })
+                    .catch((error) => {
+                        console.error('Error al cargar desde Firebase:', error);
+                        const saved = localStorage.getItem('axieTeams');
+                        if (saved) {
+                            renderTeams(JSON.parse(saved));
+                        } else {
+                            renderTeams([]);
+                        }
+                        updateConnectionStatus('disconnected');
+                    });
+            } else {
                 const saved = localStorage.getItem('axieTeams');
                 if (saved) {
                     renderTeams(JSON.parse(saved));
                 } else {
                     renderTeams([]);
                 }
+            }
+        }
+
+        function setupRealtimeListener() {
+            if (!isFirebaseConfigured || !db) {
+                console.warn('⚠️ No se puede configurar el listener: Firebase no está configurado');
+                return;
+            }
+
+            if (realtimeListener) {
+                db.ref(DB_PATH).off('value', realtimeListener);
+            }
+
+            console.log('🔄 Configurando listener en tiempo real...');
+
+            let lastUpdateTime = Date.now();
+            let updateTimeout = null;
+
+            realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
+                // Verificar al inicio para evitar procesamiento innecesario
+                if (isSyncing) {
+                    return;
+                }
+
+                const teams = snapshot.val();
+                const now = Date.now();
+
+                // Evitar actualizaciones muy frecuentes
+                if (now - lastUpdateTime < 300) {
+                    return;
+                }
+
+                const timeSinceLastSave = now - lastSaveTime;
+
+                // Si acabamos de guardar muy recientemente (< 200ms), esperar un poco
+                // Esto evita que nuestra propia actualización nos llegue de vuelta
+                // Pero permitir actualizaciones de otros usuarios después de 200ms
+                if (timeSinceLastSave < 200 && isSyncing) {
+                    return;
+                }
+
+                const normalizeData = (data) => {
+                    if (!data) return '';
+                    const normalized = (data || []).map((team, index) => ({
+                        index: index,
+                        id: String(team.id || ''),
+                        name: String(team.name || ''),
+                        axies: (team.axies || []).map(axie => ({
+                            id: String(axie.id || ''),
+                            status: String(axie.status || '')
+                        })).sort((a, b) => a.id.localeCompare(b.id))
+                    }));
+                    return JSON.stringify(normalized);
+                };
+
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(() => {
+                    // Verificar nuevamente antes de procesar
+                    if (isSyncing) {
+                        return;
+                    }
+
+                    // Si acabamos de guardar muy recientemente, esperar un poco más
+                    // pero permitir actualizaciones de otros usuarios después de 200ms
+                    if (timeSinceLastSave < 200) {
+                        return;
+                    }
+
+                    const currentData = normalizeData(getTeamsData());
+                    const newData = normalizeData(teams);
+
+                    if (currentData !== newData && newData !== '') {
+                        console.log('🔄 Actualización en tiempo real detectada');
+                        // Establecer flag ANTES de procesar para evitar loops
+                        isSyncing = true;
+                        lastUpdateTime = now;
+                        pendingSave = false;
+
+                        // Guardar posición de scroll antes de actualizar
+                        const scrollY = window.scrollY;
+
+                        // Procesar la actualización
+                        updateTeamsIncremental(teams || [], true);
+                        localStorage.setItem('axieTeams', JSON.stringify(teams || []));
+
+                        // Forzar actualización del DOM
+                        void document.body.offsetHeight; // Trigger reflow
+
+                        // Restaurar posición de scroll después de actualizar
+                        requestAnimationFrame(() => {
+                            setTimeout(() => {
+                                window.scrollTo(0, scrollY);
+                            }, 50);
+                        });
+
+                        // Permitir nuevas actualizaciones después de un tiempo más corto
+                        // para permitir actualizaciones más rápidas entre múltiples usuarios
+                        setTimeout(() => {
+                            isSyncing = false;
+                            console.log('✅ Sincronización completada, listo para nuevas actualizaciones');
+                        }, 200);
+                    }
+                }, 200);
+            }, (error) => {
+                console.error('❌ Error en el listener de Firebase:', error);
                 updateConnectionStatus('disconnected');
             });
-    } else {
-        const saved = localStorage.getItem('axieTeams');
-        if (saved) {
-            renderTeams(JSON.parse(saved));
-        } else {
-            renderTeams([]);
-        }
-    }
-}
 
-function setupRealtimeListener() {
-    if (!isFirebaseConfigured || !db) {
-        console.warn('⚠️ No se puede configurar el listener: Firebase no está configurado');
-        return;
-    }
-    
-    if (realtimeListener) {
-        db.ref(DB_PATH).off('value', realtimeListener);
-    }
-    
-    console.log('🔄 Configurando listener en tiempo real...');
-    
-    let lastUpdateTime = Date.now();
-    let updateTimeout = null;
-    
-    realtimeListener = db.ref(DB_PATH).on('value', (snapshot) => {
-        // Verificar al inicio para evitar procesamiento innecesario
-        if (isSyncing) {
-            return;
+            console.log('✅ Listener en tiempo real configurado correctamente');
         }
-        
-        const teams = snapshot.val();
-        const now = Date.now();
-        
-        // Evitar actualizaciones muy frecuentes
-        if (now - lastUpdateTime < 300) {
-            return;
-        }
-        
-        const timeSinceLastSave = now - lastSaveTime;
-        
-        // Si acabamos de guardar muy recientemente (< 200ms), esperar un poco
-        // Esto evita que nuestra propia actualización nos llegue de vuelta
-        // Pero permitir actualizaciones de otros usuarios después de 200ms
-        if (timeSinceLastSave < 200 && isSyncing) {
-            return;
-        }
-        
-        const normalizeData = (data) => {
-            if (!data) return '';
-            const normalized = (data || []).map((team, index) => ({
-                index: index,
-                id: String(team.id || ''),
-                name: String(team.name || ''),
-                axies: (team.axies || []).map(axie => ({
-                    id: String(axie.id || ''),
-                    status: String(axie.status || '')
-                })).sort((a, b) => a.id.localeCompare(b.id))
-            }));
-            return JSON.stringify(normalized);
-        };
-        
-        clearTimeout(updateTimeout);
-        updateTimeout = setTimeout(() => {
-            // Verificar nuevamente antes de procesar
-            if (isSyncing) {
+
+        function addTeam() {
+            const teamName = document.getElementById('teamNameInput').value.trim();
+            const axieIdsRaw = document.getElementById('axieIdsInput').value.trim();
+            if (!teamName) {
+                alert("⚠️ Agrega un nombre de equipo");
                 return;
             }
-            
-            // Si acabamos de guardar muy recientemente, esperar un poco más
-            // pero permitir actualizaciones de otros usuarios después de 200ms
-            if (timeSinceLastSave < 200) {
-                return;
+
+            const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()) : [];
+            const container = document.getElementById('teamsContainer');
+
+            if (container.querySelector('.empty-state')) {
+                container.innerHTML = '';
             }
-            
-            const currentData = normalizeData(getTeamsData());
-            const newData = normalizeData(teams);
-            
-            if (currentData !== newData && newData !== '') {
-                console.log('🔄 Actualización en tiempo real detectada');
-                // Establecer flag ANTES de procesar para evitar loops
-                isSyncing = true;
-                lastUpdateTime = now;
-                pendingSave = false;
-                
-                // Guardar posición de scroll antes de actualizar
-                const scrollY = window.scrollY;
-                
-                // Procesar la actualización
-                updateTeamsIncremental(teams || [], true);
-                localStorage.setItem('axieTeams', JSON.stringify(teams || []));
-                
-                // Forzar actualización del DOM
-                void document.body.offsetHeight; // Trigger reflow
-                
-                // Restaurar posición de scroll después de actualizar
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        window.scrollTo(0, scrollY);
-                    }, 50);
-                });
-                
-                // Permitir nuevas actualizaciones después de un tiempo más corto
-                // para permitir actualizaciones más rápidas entre múltiples usuarios
-                setTimeout(() => {
-                    isSyncing = false;
-                    console.log('✅ Sincronización completada, listo para nuevas actualizaciones');
-                }, 200);
-            }
-        }, 200);
-    }, (error) => {
-        console.error('❌ Error en el listener de Firebase:', error);
-        updateConnectionStatus('disconnected');
-    });
-    
-    console.log('✅ Listener en tiempo real configurado correctamente');
-}
 
-function addTeam() {
-    const teamName = document.getElementById('teamNameInput').value.trim();
-    const axieIdsRaw = document.getElementById('axieIdsInput').value.trim();
-    if(!teamName) { 
-        alert("⚠️ Agrega un nombre de equipo"); 
-        return; 
-    }
+            const teamDiv = document.createElement('div');
+            teamDiv.className = 'team-card';
+            teamDiv.dataset.teamId = teamCount;
 
-    const axieIds = axieIdsRaw ? axieIdsRaw.split(/[\s,]+/).filter(id => id.trim()) : [];
-    const container = document.getElementById('teamsContainer');
-    
-    if (container.querySelector('.empty-state')) {
-        container.innerHTML = '';
-    }
+            const header = document.createElement('div');
+            header.className = 'team-header';
 
-    const teamDiv = document.createElement('div');
-    teamDiv.className = 'team-card';
-    teamDiv.dataset.teamId = teamCount;
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'team-name';
+            nameSpan.textContent = teamName;
+            nameSpan.title = 'Haz doble clic para editar';
+            nameSpan.addEventListener('dblclick', () => editTeamName(teamCount));
 
-    const header = document.createElement('div');
-    header.className = 'team-header';
-    
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'team-name';
-    nameSpan.textContent = teamName;
-    nameSpan.title = 'Haz doble clic para editar';
-    nameSpan.addEventListener('dblclick', () => editTeamName(teamCount));
-    
-    let lastTap = 0;
-    nameSpan.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        if (tapLength < 300 && tapLength > 0) {
-            e.preventDefault();
-            editTeamName(teamCount);
-        }
-        lastTap = currentTime;
-    });
-    
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'team-buttons';
-    
-    const moveUpBtn = document.createElement('button');
-    moveUpBtn.innerHTML = '⬆';
-    moveUpBtn.title = 'Mover arriba';
-    moveUpBtn.onclick = () => moverParaArriba(teamCount);
-    
-    const moveDownBtn = document.createElement('button');
-    moveDownBtn.innerHTML = '⬇';
-    moveDownBtn.title = 'Mover abajo';
-    moveDownBtn.onclick = () => moverParaAbajo(teamCount);
-    
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'clear-axies-btn';
-    clearBtn.innerHTML = '🗑️ Limpiar';
-    clearBtn.onclick = () => clearAllAxies(teamCount);
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '🗑️ Eliminar';
-    deleteBtn.onclick = () => deleteTeam(teamCount);
-    
-    buttonsContainer.appendChild(moveUpBtn);
-    buttonsContainer.appendChild(moveDownBtn);
-    buttonsContainer.appendChild(clearBtn);
-    buttonsContainer.appendChild(deleteBtn);
-    
-    header.appendChild(nameSpan);
-    header.appendChild(buttonsContainer);
-    teamDiv.appendChild(header);
+            let lastTap = 0;
+            nameSpan.addEventListener('touchend', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 300 && tapLength > 0) {
+                    e.preventDefault();
+                    editTeamName(teamCount);
+                }
+                lastTap = currentTime;
+            });
 
-    const grid = document.createElement('div');
-    grid.className = 'axie-grid';
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'team-buttons';
 
-    axieIds.forEach(id => {
-        const trimmedId = id.trim();
-        if (trimmedId) {
-            addAxieToGrid(trimmedId, grid);
-        }
-    });
+            const moveUpBtn = document.createElement('button');
+            moveUpBtn.innerHTML = '⬆';
+            moveUpBtn.title = 'Mover arriba';
+            moveUpBtn.onclick = () => moverParaArriba(teamCount);
 
-    teamDiv.appendChild(grid);
+            const moveDownBtn = document.createElement('button');
+            moveDownBtn.innerHTML = '⬇';
+            moveDownBtn.title = 'Mover abajo';
+            moveDownBtn.onclick = () => moverParaAbajo(teamCount);
 
-    const addAxieDiv = document.createElement('div');
-    addAxieDiv.className = 'add-axie';
-    addAxieDiv.innerHTML = `
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'clear-axies-btn';
+            clearBtn.innerHTML = '🗑️ Limpiar';
+            clearBtn.onclick = () => clearAllAxies(teamCount);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '🗑️ Eliminar';
+            deleteBtn.onclick = () => deleteTeam(teamCount);
+
+            buttonsContainer.appendChild(moveUpBtn);
+            buttonsContainer.appendChild(moveDownBtn);
+            buttonsContainer.appendChild(clearBtn);
+            buttonsContainer.appendChild(deleteBtn);
+
+            header.appendChild(nameSpan);
+            header.appendChild(buttonsContainer);
+            teamDiv.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'axie-grid';
+
+            axieIds.forEach(id => {
+                const trimmedId = id.trim();
+                if (trimmedId) {
+                    addAxieToGrid(trimmedId, grid);
+                }
+            });
+
+            teamDiv.appendChild(grid);
+
+            const addAxieDiv = document.createElement('div');
+            addAxieDiv.className = 'add-axie';
+            addAxieDiv.innerHTML = `
         <input type="text" placeholder="ID Axie o IDs separados por coma" id="axieInput-${teamCount}" onkeypress="if(event.key==='Enter') addAxie(${teamCount})">
         <button onclick="addAxie(${teamCount})">➕ Agregar Axie(s)</button>
         <button class="copy-ids-btn" onclick="copyAllAxieIds(${teamCount})">📋 Copiar todas las IDs</button>
     `;
-    teamDiv.appendChild(addAxieDiv);
+            teamDiv.appendChild(addAxieDiv);
 
-    container.appendChild(teamDiv);
+            container.appendChild(teamDiv);
 
-    teamCount++;
-    document.getElementById('teamNameInput').value = '';
-    document.getElementById('axieIdsInput').value = '';
+            teamCount++;
+            document.getElementById('teamNameInput').value = '';
+            document.getElementById('axieIdsInput').value = '';
 
-    saveTeams();
-}
-
-function addAxieToGrid(id, grid, status='', shouldSave = true) {
-    
-    const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
-    if (existingAxies.some(axie => axie.dataset.axieId === id)) {
-        if (shouldSave) alert("⚠️ Este Axie ya está en el equipo");
-        return false;
-    }
-    
-    const axieDiv = document.createElement('div');
-    axieDiv.className = 'axie-container';
-    axieDiv.dataset.axieId = id;
-    if(status) axieDiv.classList.add(status);
-
-    const imageWrapper = document.createElement('div');
-    imageWrapper.className = 'axie-image-wrapper';
-
-    const img = document.createElement('img');
-    img.src = `https://axiecdn.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
-    img.alt = `Axie ${id}`;
-    img.className = 'loading';
-    
-    let imageValid = false;
-    let validationTimeout = null;
-    
-    img.onload = () => {
-        img.classList.remove('loading');
-        img.classList.remove('error');
-        imageValid = true;
-        if (validationTimeout) clearTimeout(validationTimeout);
-    };
-    
-    img.onerror = () => {
-        const altImg = new Image();
-        altImg.src = `https://assets.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
-        altImg.onload = () => {
-            img.src = altImg.src;
-            img.classList.remove('loading');
-            img.classList.remove('error');
-            imageValid = true;
-            if (validationTimeout) clearTimeout(validationTimeout);
-        };
-        altImg.onerror = () => {
-            img.classList.remove('loading');
-            img.classList.add('error');
-            if (shouldSave) {
-                alert(`⚠️ ID inválida: ${id}\nEl Axie con este ID no existe.`);
-            }
-            axieDiv.remove();
-            imageValid = false;
-            if (validationTimeout) clearTimeout(validationTimeout);
-        };
-    };
-    
-    validationTimeout = setTimeout(() => {
-        if (!imageValid) {
-            if (shouldSave) {
-                alert(`⚠️ ID inválida: ${id}\nNo se pudo cargar la imagen del Axie.`);
-            }
-            axieDiv.remove();
-        }
-    }, 5000);
-
-    imageWrapper.appendChild(img);
-
-    const idLabel = document.createElement('div');
-    idLabel.className = 'axie-id-label';
-    idLabel.textContent = `#${id}`;
-
-    // Prevenir múltiples clics muy rápidos usando atributo de datos
-    // Reducido porque la cola de guardado maneja el orden
-    const CLICK_DEBOUNCE = 100; // ms
-    
-    axieDiv.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const now = Date.now();
-        const lastClickTime = axieDiv.dataset.lastClickTime ? parseInt(axieDiv.dataset.lastClickTime) : 0;
-        
-        // Ignorar clics muy rápidos (debounce)
-        if (now - lastClickTime < CLICK_DEBOUNCE) {
-            return;
-        }
-        axieDiv.dataset.lastClickTime = now.toString();
-        
-        axieDiv.blur();
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
-        
-        if (document.activeElement && document.activeElement !== document.body) {
-            document.activeElement.blur();
-        }
-        
-        const wasBanned = axieDiv.classList.contains('banned');
-        const wasPicked = axieDiv.classList.contains('picked');
-        
-        // Actualizar estado inmediatamente
-        let newStatus = '';
-        if(wasBanned) {
-            axieDiv.classList.remove('banned');
-            axieDiv.classList.add('picked');
-            newStatus = 'picked';
-        } else if(wasPicked) {
-            axieDiv.classList.remove('picked');
-            newStatus = '';
-        } else {
-            axieDiv.classList.add('banned');
-            newStatus = 'banned';
-        }
-        
-        axieDiv.style.transform = '';
-        axieDiv.style.webkitTransform = '';
-        
-        // Forzar actualización del DOM antes de guardar
-        void axieDiv.offsetHeight; // Trigger reflow
-        
-        // Marcar el tiempo del cambio ANTES de guardar
-        const changeTime = Date.now();
-        axieDiv.dataset.lastStatusChange = changeTime.toString();
-        
-        // Agregar un delay más largo para asegurar que el DOM se actualice completamente
-        // y que el estado se refleje correctamente antes de guardar
-        // Esto es especialmente importante para clics rápidos
-        setTimeout(() => {
-            // Doble verificación: leer el estado actual del DOM para asegurar que es correcto
-            const currentBanned = axieDiv.classList.contains('banned');
-            const currentPicked = axieDiv.classList.contains('picked');
-            const actualStatus = currentBanned ? 'banned' : (currentPicked ? 'picked' : '');
-            
-            // Verificar que el estado actual coincide con el esperado
-            if (actualStatus === newStatus || (newStatus === '' && actualStatus === '')) {
-                lastSaveTime = Date.now();
-                // Usar requestAnimationFrame para asegurar que el DOM esté completamente actualizado
-                requestAnimationFrame(() => {
-                    saveTeams(true);
-                });
-            } else {
-                // Si hay discrepancia, esperar un poco más y reintentar
-                setTimeout(() => {
-                    lastSaveTime = Date.now();
-                    saveTeams(true);
-                }, 100);
-            }
-        }, 400); // Delay de 400ms para asegurar que el DOM se actualice completamente
-        
-        setTimeout(() => {
-            axieDiv.blur();
-            if (document.activeElement) {
-                document.activeElement.blur();
-            }
-            if (document.body) {
-                document.body.focus();
-            }
-        }, 50);
-    });
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'axie-delete';
-    deleteBtn.innerText = '×';
-    deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        axieDiv.style.transition = 'all 0.3s ease';
-        axieDiv.style.transform = 'scale(0) rotate(180deg)';
-        axieDiv.style.opacity = '0';
-        setTimeout(() => {
-            axieDiv.remove();
-            // Forzar actualización del DOM antes de guardar
-            void grid.offsetHeight; // Trigger reflow
-            // Guardar inmediatamente para que se propague en tiempo real
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    saveTeams(true);
-                }, 100);
-            });
-        }, 300);
-    };
-
-    imageWrapper.appendChild(img);
-    axieDiv.appendChild(imageWrapper);
-    axieDiv.appendChild(idLabel);
-    axieDiv.appendChild(deleteBtn);
-    grid.appendChild(axieDiv);
-    
-    return true;
-}
-
-function addAxie(teamId) {
-    const input = document.getElementById(`axieInput-${teamId}`);
-    const idsRaw = input.value.trim();
-    if(!idsRaw) return;
-    
-    const ids = idsRaw.split(/[\s,]+/).filter(id => id.trim());
-    if(ids.length === 0) return;
-    
-    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    const grid = teamDiv.querySelector('.axie-grid');
-    
-    const validIds = ids.filter(id => id.trim());
-    let addedCount = 0;
-    let validCount = 0;
-    
-    validIds.forEach((id, index) => {
-        const trimmedId = id.trim();
-        setTimeout(() => {
-            const result = addAxieToGrid(trimmedId, grid, '', false);
-            if(result !== false) {
-                validCount++;
-            }
-            addedCount++;
-            
-            // Cuando todos los axies se hayan agregado, guardar
-            if(addedCount === validIds.length) {
-                // Forzar actualización del DOM antes de guardar
-                void grid.offsetHeight; // Trigger reflow
-                // Esperar un poco más para asegurar que todas las imágenes se hayan agregado al DOM
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        if(validCount > 0) {
-                            // Guardar inmediatamente para que se propague en tiempo real
-                            saveTeams(true);
-                        }
-                    }, 200);
-                });
-            }
-        }, index * 30);
-    });
-    
-    input.value = '';
-}
-
-function copyAllAxieIds(teamId) {
-    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if(!teamDiv) return;
-    
-    const grid = teamDiv.querySelector('.axie-grid');
-    if(!grid) return;
-    
-    const axies = Array.from(grid.querySelectorAll('.axie-container'));
-    if(axies.length === 0) {
-        alert('Este equipo no tiene axies para copiar');
-        return;
-    }
-    
-    const ids = axies.map(axie => axie.dataset.axieId).filter(id => id);
-    const idsString = ids.join(', ');
-    
-    const updateButton = (button) => {
-        const originalText = button.innerHTML;
-        button.innerHTML = '✓ Copiado!';
-        button.style.background = 'rgba(46, 213, 115, 0.2)';
-        button.style.borderColor = 'rgba(46, 213, 115, 0.5)';
-        button.style.color = '#2ed573';
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.borderColor = '';
-            button.style.color = '';
-        }, 2000);
-    };
-    
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(idsString).then(() => {
-            const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
-            if(button) updateButton(button);
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = idsString;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
-            if(button) updateButton(button);
-        });
-    } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = idsString;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
-        if(button) updateButton(button);
-    }
-}
-
-function editTeamName(teamId) {
-    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if(!teamDiv) return;
-    
-    const nameSpan = teamDiv.querySelector('.team-name');
-    if(!nameSpan) return;
-    
-    const currentName = nameSpan.textContent;
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'team-name-input';
-    input.value = currentName;
-    
-    nameSpan.style.display = 'none';
-    nameSpan.parentElement.insertBefore(input, nameSpan);
-    input.focus();
-    input.select();
-    
-    const saveName = () => {
-        const newName = input.value.trim();
-        if(newName && newName !== currentName) {
-            nameSpan.textContent = newName;
             saveTeams();
         }
-        input.remove();
-        nameSpan.style.display = '';
-    };
-    
-    input.addEventListener('blur', saveName);
-    input.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
-            e.preventDefault();
-            saveName();
-        } else if(e.key === 'Escape') {
-            input.remove();
-            nameSpan.style.display = '';
-        }
-    });
-}
 
-function clearAllAxies(teamId) {
-    if (!confirm('¿Estás seguro de que quieres eliminar TODOS los axies de este equipo?')) {
-        return;
-    }
-    
-    const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if(!teamDiv) return;
-    
-    const grid = teamDiv.querySelector('.axie-grid');
-    if(!grid) return;
-    
-    const axies = grid.querySelectorAll('.axie-container');
-    if(axies.length === 0) {
-        alert('Este equipo no tiene axies para eliminar');
-        return;
-    }
-    
-    axies.forEach(axie => {
-        axie.style.transition = 'all 0.3s ease';
-        axie.style.transform = 'scale(0) rotate(180deg)';
-        axie.style.opacity = '0';
-    });
-    
-    setTimeout(() => {
-        axies.forEach(axie => axie.remove());
-        // Forzar actualización del DOM antes de guardar
-        void grid.offsetHeight; // Trigger reflow
-        // Guardar inmediatamente después de limpiar
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                saveTeams(true);
-            }, 100);
-        });
-    }, 300);
-}
+        function addAxieToGrid(id, grid, status = '', shouldSave = true) {
 
-function deleteTeam(teamId) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este equipo?')) {
-        return;
-    }
-    const container = document.getElementById('teamsContainer');
-    const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
-    if(teamDiv) {
-        teamDiv.style.transition = 'all 0.4s ease';
-        teamDiv.style.transform = 'translateX(-100%)';
-        teamDiv.style.opacity = '0';
-        setTimeout(() => {
-            teamDiv.remove();
-            setTimeout(() => {
-                saveTeams();
-            }, 100);
-            if (container.children.length === 0) {
-                container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+            const existingAxies = Array.from(grid.querySelectorAll('.axie-container'));
+            if (existingAxies.some(axie => axie.dataset.axieId === id)) {
+                if (shouldSave) alert("⚠️ Este Axie ya está en el equipo");
+                return false;
             }
-        }, 400);
-    }
-}
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            checkLogin();
-        }, 200);
-    });
-} else {
-    setTimeout(() => {
-        checkLogin();
-    }, 200);
-}
-</script>
+            const axieDiv = document.createElement('div');
+            axieDiv.className = 'axie-container';
+            axieDiv.dataset.axieId = id;
+            if (status) axieDiv.classList.add(status);
+
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = 'axie-image-wrapper';
+
+            const img = document.createElement('img');
+            img.src = `https://axiecdn.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
+            img.alt = `Axie ${id}`;
+            img.className = 'loading';
+
+            let imageValid = false;
+            let validationTimeout = null;
+
+            img.onload = () => {
+                img.classList.remove('loading');
+                img.classList.remove('error');
+                imageValid = true;
+                if (validationTimeout) clearTimeout(validationTimeout);
+            };
+
+            img.onerror = () => {
+                const altImg = new Image();
+                altImg.src = `https://assets.axieinfinity.com/axies/${id}/axie/axie-full-transparent.png`;
+                altImg.onload = () => {
+                    img.src = altImg.src;
+                    img.classList.remove('loading');
+                    img.classList.remove('error');
+                    imageValid = true;
+                    if (validationTimeout) clearTimeout(validationTimeout);
+                };
+                altImg.onerror = () => {
+                    img.classList.remove('loading');
+                    img.classList.add('error');
+                    if (shouldSave) {
+                        alert(`⚠️ ID inválida: ${id}\nEl Axie con este ID no existe.`);
+                    }
+                    axieDiv.remove();
+                    imageValid = false;
+                    if (validationTimeout) clearTimeout(validationTimeout);
+                };
+            };
+
+            validationTimeout = setTimeout(() => {
+                if (!imageValid) {
+                    if (shouldSave) {
+                        alert(`⚠️ ID inválida: ${id}\nNo se pudo cargar la imagen del Axie.`);
+                    }
+                    axieDiv.remove();
+                }
+            }, 5000);
+
+            imageWrapper.appendChild(img);
+
+            const idLabel = document.createElement('div');
+            idLabel.className = 'axie-id-label';
+            idLabel.textContent = `#${id}`;
+
+            // Prevenir múltiples clics muy rápidos usando atributo de datos
+            // Reducido porque la cola de guardado maneja el orden
+            const CLICK_DEBOUNCE = 100; // ms
+
+            axieDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const now = Date.now();
+                const lastClickTime = axieDiv.dataset.lastClickTime ? parseInt(axieDiv.dataset.lastClickTime) : 0;
+
+                // Ignorar clics muy rápidos (debounce)
+                if (now - lastClickTime < CLICK_DEBOUNCE) {
+                    return;
+                }
+                axieDiv.dataset.lastClickTime = now.toString();
+
+                axieDiv.blur();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+
+                if (document.activeElement && document.activeElement !== document.body) {
+                    document.activeElement.blur();
+                }
+
+                const wasBanned = axieDiv.classList.contains('banned');
+                const wasPicked = axieDiv.classList.contains('picked');
+
+                // Actualizar estado inmediatamente
+                let newStatus = '';
+                if (wasBanned) {
+                    axieDiv.classList.remove('banned');
+                    axieDiv.classList.add('picked');
+                    newStatus = 'picked';
+                } else if (wasPicked) {
+                    axieDiv.classList.remove('picked');
+                    newStatus = '';
+                } else {
+                    axieDiv.classList.add('banned');
+                    newStatus = 'banned';
+                }
+
+                axieDiv.style.transform = '';
+                axieDiv.style.webkitTransform = '';
+
+                // Forzar actualización del DOM antes de guardar
+                void axieDiv.offsetHeight; // Trigger reflow
+
+                // Marcar el tiempo del cambio ANTES de guardar
+                const changeTime = Date.now();
+                axieDiv.dataset.lastStatusChange = changeTime.toString();
+
+                // Agregar un delay más largo para asegurar que el DOM se actualice completamente
+                // y que el estado se refleje correctamente antes de guardar
+                // Esto es especialmente importante para clics rápidos
+                setTimeout(() => {
+                    // Doble verificación: leer el estado actual del DOM para asegurar que es correcto
+                    const currentBanned = axieDiv.classList.contains('banned');
+                    const currentPicked = axieDiv.classList.contains('picked');
+                    const actualStatus = currentBanned ? 'banned' : (currentPicked ? 'picked' : '');
+
+                    // Verificar que el estado actual coincide con el esperado
+                    if (actualStatus === newStatus || (newStatus === '' && actualStatus === '')) {
+                        lastSaveTime = Date.now();
+                        // Usar requestAnimationFrame para asegurar que el DOM esté completamente actualizado
+                        requestAnimationFrame(() => {
+                            saveTeams(true);
+                        });
+                    } else {
+                        // Si hay discrepancia, esperar un poco más y reintentar
+                        setTimeout(() => {
+                            lastSaveTime = Date.now();
+                            saveTeams(true);
+                        }, 100);
+                    }
+                }, 400); // Delay de 400ms para asegurar que el DOM se actualice completamente
+
+                setTimeout(() => {
+                    axieDiv.blur();
+                    if (document.activeElement) {
+                        document.activeElement.blur();
+                    }
+                    if (document.body) {
+                        document.body.focus();
+                    }
+                }, 50);
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'axie-delete';
+            deleteBtn.innerText = '×';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                axieDiv.style.transition = 'all 0.3s ease';
+                axieDiv.style.transform = 'scale(0) rotate(180deg)';
+                axieDiv.style.opacity = '0';
+                setTimeout(() => {
+                    axieDiv.remove();
+                    // Forzar actualización del DOM antes de guardar
+                    void grid.offsetHeight; // Trigger reflow
+                    // Guardar inmediatamente para que se propague en tiempo real
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            saveTeams(true);
+                        }, 100);
+                    });
+                }, 300);
+            };
+
+            imageWrapper.appendChild(img);
+            axieDiv.appendChild(imageWrapper);
+            axieDiv.appendChild(idLabel);
+            axieDiv.appendChild(deleteBtn);
+            grid.appendChild(axieDiv);
+
+            return true;
+        }
+
+        function addAxie(teamId) {
+            const input = document.getElementById(`axieInput-${teamId}`);
+            const idsRaw = input.value.trim();
+            if (!idsRaw) return;
+
+            const ids = idsRaw.split(/[\s,]+/).filter(id => id.trim());
+            if (ids.length === 0) return;
+
+            const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            const grid = teamDiv.querySelector('.axie-grid');
+
+            const validIds = ids.filter(id => id.trim());
+            let addedCount = 0;
+            let validCount = 0;
+
+            validIds.forEach((id, index) => {
+                const trimmedId = id.trim();
+                setTimeout(() => {
+                    const result = addAxieToGrid(trimmedId, grid, '', false);
+                    if (result !== false) {
+                        validCount++;
+                    }
+                    addedCount++;
+
+                    // Cuando todos los axies se hayan agregado, guardar
+                    if (addedCount === validIds.length) {
+                        // Forzar actualización del DOM antes de guardar
+                        void grid.offsetHeight; // Trigger reflow
+                        // Esperar un poco más para asegurar que todas las imágenes se hayan agregado al DOM
+                        requestAnimationFrame(() => {
+                            setTimeout(() => {
+                                if (validCount > 0) {
+                                    // Guardar inmediatamente para que se propague en tiempo real
+                                    saveTeams(true);
+                                }
+                            }, 200);
+                        });
+                    }
+                }, index * 30);
+            });
+
+            input.value = '';
+        }
+
+        function copyAllAxieIds(teamId) {
+            const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (!teamDiv) return;
+
+            const grid = teamDiv.querySelector('.axie-grid');
+            if (!grid) return;
+
+            const axies = Array.from(grid.querySelectorAll('.axie-container'));
+            if (axies.length === 0) {
+                alert('Este equipo no tiene axies para copiar');
+                return;
+            }
+
+            const ids = axies.map(axie => axie.dataset.axieId).filter(id => id);
+            const idsString = ids.join(', ');
+
+            const updateButton = (button) => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copiado!';
+                button.style.background = 'rgba(46, 213, 115, 0.2)';
+                button.style.borderColor = 'rgba(46, 213, 115, 0.5)';
+                button.style.color = '#2ed573';
+
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                    button.style.borderColor = '';
+                    button.style.color = '';
+                }, 2000);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(idsString).then(() => {
+                    const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+                    if (button) updateButton(button);
+                }).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = idsString;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+                    if (button) updateButton(button);
+                });
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = idsString;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                const button = document.querySelector(`button.copy-ids-btn[onclick*="${teamId}"]`);
+                if (button) updateButton(button);
+            }
+        }
+
+        function editTeamName(teamId) {
+            const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (!teamDiv) return;
+
+            const nameSpan = teamDiv.querySelector('.team-name');
+            if (!nameSpan) return;
+
+            const currentName = nameSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'team-name-input';
+            input.value = currentName;
+
+            nameSpan.style.display = 'none';
+            nameSpan.parentElement.insertBefore(input, nameSpan);
+            input.focus();
+            input.select();
+
+            const saveName = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    nameSpan.textContent = newName;
+                    saveTeams();
+                }
+                input.remove();
+                nameSpan.style.display = '';
+            };
+
+            input.addEventListener('blur', saveName);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveName();
+                } else if (e.key === 'Escape') {
+                    input.remove();
+                    nameSpan.style.display = '';
+                }
+            });
+        }
+
+        function clearAllAxies(teamId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar TODOS los axies de este equipo?')) {
+                return;
+            }
+
+            const teamDiv = document.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (!teamDiv) return;
+
+            const grid = teamDiv.querySelector('.axie-grid');
+            if (!grid) return;
+
+            const axies = grid.querySelectorAll('.axie-container');
+            if (axies.length === 0) {
+                alert('Este equipo no tiene axies para eliminar');
+                return;
+            }
+
+            axies.forEach(axie => {
+                axie.style.transition = 'all 0.3s ease';
+                axie.style.transform = 'scale(0) rotate(180deg)';
+                axie.style.opacity = '0';
+            });
+
+            setTimeout(() => {
+                axies.forEach(axie => axie.remove());
+                // Forzar actualización del DOM antes de guardar
+                void grid.offsetHeight; // Trigger reflow
+                // Guardar inmediatamente después de limpiar
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        saveTeams(true);
+                    }, 100);
+                });
+            }, 300);
+        }
+
+        function deleteTeam(teamId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este equipo?')) {
+                return;
+            }
+            const container = document.getElementById('teamsContainer');
+            const teamDiv = container.querySelector(`.team-card[data-team-id="${teamId}"]`);
+            if (teamDiv) {
+                teamDiv.style.transition = 'all 0.4s ease';
+                teamDiv.style.transform = 'translateX(-100%)';
+                teamDiv.style.opacity = '0';
+                setTimeout(() => {
+                    teamDiv.remove();
+                    setTimeout(() => {
+                        saveTeams();
+                    }, 100);
+                    if (container.children.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No hay equipos guardados. ¡Crea tu primer equipo arriba!</div>';
+                    }
+                }, 400);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    checkLogin();
+                }, 200);
+            });
+        } else {
+            setTimeout(() => {
+                checkLogin();
+            }, 200);
+        }
+    </script>
 
 </body>
+
 </html>
